@@ -4,10 +4,15 @@ matplotlib==3.3.3
 numpy==1.19.4
 pandas==1.2.0
 Pillow==8.0.1
+protobuf==3.13.0
 pyparsing==2.4.7
+PyQt5==5.15.1
+PyQt5-sip==4.19.24
 python-dateutil==2.8.1
 pytz==2020.5
 six==1.15.0
+TBB==0.1
 torch==1.7.1
 torchvision==0.8.2
 typing-extensions==3.7.4.3
+youtube-dl==2020.12.22

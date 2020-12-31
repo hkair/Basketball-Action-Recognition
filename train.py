@@ -150,7 +150,7 @@ if __name__ == "__main__":
                                                [VideoFilePathToTensor(max_len=16, fps=10, padding_mode='last')]))
 
     train_subset, val_subset = random_split(
-        basketball_dataset, [27201, 10000], generator=torch.Generator().manual_seed(1))
+    basketball_dataset, [27085, 10000], generator=torch.Generator().manual_seed(1))
     train_loader = DataLoader(dataset=train_subset, shuffle=True, batch_size=batch_size)
     val_loader = DataLoader(dataset=train_subset, shuffle=False, batch_size=batch_size)
 
@@ -183,3 +183,4 @@ if __name__ == "__main__":
 
     # Train and evaluate
     model, hist = train_model(model, dataloaders_dict, criterion, optimizer_ft, num_epochs=num_epochs)
+

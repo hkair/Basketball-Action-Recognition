@@ -11,13 +11,14 @@ from torchvision import transforms
 class BasketballDataset(Dataset):
     """SpaceJam: a Dataset for Basketball Action Recognition."""
 
-    def __init__(self, annotation_dict, label_dict, video_dir="dataset/examples/", transform=None):
+    def __init__(self, annotation_dict, label_dict, video_dir="dataset/examples/", transform=None, poseData=False):
         with open(annotation_dict) as f:
             self.video_list = list(json.load(f).items())
         with open(label_dict) as l:
             self.label_dict = json.load(l, object_hook=self.keystoint)
 
         self.video_dir = video_dir
+        self.poseData = poseData
         self.transform = transform
 
     def __len__(self):
@@ -34,8 +35,10 @@ class BasketballDataset(Dataset):
 
         joints = np.load(self.video_dir+video_id+".npy", allow_pickle=True)
         encoding = np.squeeze(np.eye(10)[np.array([0,1,2,3,4,5,6,7,8,9]).reshape(-1)])
-        # {'video_id': video_id, 'video': video, 'joints': joints, 'action': encoding[self.video_list[idx][1]-1], "action_name": self.label_dict[self.video_list[idx][1]]}
-        sample = {'video': video, 'action': encoding[self.video_list[idx][1]-1]}
+        if self.poseData:
+            sample = {'joints': joints, 'action': encoding[self.video_list[idx][1]-1]}
+        else:
+            sample = {'video': video, 'action': encoding[self.video_list[idx][1]-1]}
 
         return sample
 
@@ -136,8 +139,9 @@ class VideoFilePathToTensor(object):
 
 if __name__ == "__main__":
     basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
-                                   label_dict="dataset/labels_dict.json",
-                                   transform=transforms.Compose([VideoFilePathToTensor(max_len=16, fps=10, padding_mode='last')]))
+                                label_dict="dataset/labels_dict.json",
+                                transform=transforms.Compose([VideoFilePathToTensor(max_len=16, fps=10, padding_mode='last')]),
+                                poseData=True)
 
     # sample = basketball_dataset[3]
     # print(len(basketball_dataset))
@@ -147,13 +151,12 @@ if __name__ == "__main__":
     #     frame.show()
     # print(sample['video_id'])
     # print(video.size())
-    # print(sample['joints'].shape, sample['action'], sample['action_name'])
 
     print(len(basketball_dataset))
     with open("dataset/annotation_dict.json") as f:
         video_list = list(json.load(f).items())
     print(len(video_list))
-
+    print(basketball_dataset[1]['joints'])
 
 
 

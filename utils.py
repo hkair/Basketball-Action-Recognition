@@ -21,7 +21,8 @@ class BasketballDataset(Dataset):
         self.transform = transform
 
     def __len__(self):
-        return len(glob.glob1(self.video_dir, "*.mp4"))
+        # return length of none-flipped videos in directory
+        return len(self.video_list)
 
     def __getitem__(self, idx):
         print(idx)
@@ -138,15 +139,20 @@ if __name__ == "__main__":
                                    label_dict="dataset/labels_dict.json",
                                    transform=transforms.Compose([VideoFilePathToTensor(max_len=16, fps=10, padding_mode='last')]))
 
-    sample = basketball_dataset[3]
+    # sample = basketball_dataset[3]
+    # print(len(basketball_dataset))
+    # video = sample['video']
+    # for i in range(0,15):
+    #     frame = transforms.ToPILImage()(video[:, i, :, :])
+    #     frame.show()
+    # print(sample['video_id'])
+    # print(video.size())
+    # print(sample['joints'].shape, sample['action'], sample['action_name'])
+
     print(len(basketball_dataset))
-    video = sample['video']
-    #for i in range(0,15):
-    #    frame = transforms.ToPILImage()(video[:, i, :, :])
-    #    frame.show()
-    #print(sample['video_id'])
-    print(video.size())
-    #print(sample['joints'].shape, sample['action'], sample['action_name'])
+    with open("dataset/annotation_dict.json") as f:
+        video_list = list(json.load(f).items())
+    print(len(video_list))
 
 
 

@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 import json
 
 # Read Dictionary from dataset
-with open('dataset/annotation_dict.json') as f:
+with open('./dataset/annotation_dict.json') as f:
     annotation_dict = json.load(f)
 
 def keystoint(x):
     return {int(k): v for k, v in x.items()}
 
-with open('dataset/labels_dict.json') as f:
+with open('./dataset/labels_dict.json') as f:
     labels_dict = json.load(f, object_hook=keystoint)
 
 # Let's first visualize the distribution of actions in the

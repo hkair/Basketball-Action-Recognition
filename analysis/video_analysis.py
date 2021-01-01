@@ -5,13 +5,13 @@ import numpy as np
 import json
 
 # Read Dictionary from dataset
-with open('./dataset/annotation_dict.json') as f:
+with open('../dataset/annotation_dict.json') as f:
     annotation_dict = json.load(f)
 
 def keystoint(x):
     return {int(k): v for k, v in x.items()}
 
-with open('./dataset/labels_dict.json') as f:
+with open('../dataset/labels_dict.json') as f:
     labels_dict = json.load(f, object_hook=keystoint)
 
 # Function to open and play video
@@ -70,7 +70,7 @@ def draw_joints(image, joints):
     cv2.imshow('Frame', joint)
 
 if __name__ == "__main__":
-    path = "dataset/examples/0003123"
+    path = "../dataset/examples/0003123"
     a = np.load(path + ".npy", allow_pickle=True)
     print(a)
     print("Number of Frames:", len(a))

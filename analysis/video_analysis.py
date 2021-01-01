@@ -57,17 +57,12 @@ def draw_joints(image, joints):
     joint_dict = {0: "Nose", 1: "Neck", 2: "Right Shoulder", 3: "ElbowRight", 4: "WristRight", 5: "LeftShoulder",
                   6: "ElbowLeft", 7: "WristLeft", 8: "Hip Right",
                   9: "RightKnee", 10: "Ankle Right", 11: "LeftHip", 12: "Knee Left", 13: "Ankle Left"}
-    # for key, val in joints.items():
-    #     joint = cv2.circle(image, val, radius=0, color=(0, 0, 255), thickness=-3)
-    #     text_loc = (val[0] + 10, val[1] + 10)
-    #     if (key <= 13):
-    #         cv2.putText(image, joint_dict[key], text_loc, cv2.FONT_HERSHEY_SIMPLEX, 0.25, (255, 0, 0), 1)
-    #     cv2.imshow('Frame', joint)
-
-    joint = cv2.circle(image, joints[16], radius=0, color=(0, 0, 255), thickness=-3)
-    text_loc = (joints[14][0] + 10, joints[14][1] + 10)
-    cv2.putText(image, "hello", text_loc, cv2.FONT_HERSHEY_SIMPLEX, 0.25, (255, 0, 0), 1)
-    cv2.imshow('Frame', joint)
+    for key, val in joints.items():
+        joint = cv2.circle(image, val, radius=0, color=(0, 0, 255), thickness=-3)
+        text_loc = (val[0] + 10, val[1] + 10)
+        if (key <= 13):
+            cv2.putText(image, joint_dict[key], text_loc, cv2.FONT_HERSHEY_SIMPLEX, 0.25, (255, 0, 0), 1)
+        cv2.imshow('Frame', joint)
 
 if __name__ == "__main__":
     path = "../dataset/examples/0003123"

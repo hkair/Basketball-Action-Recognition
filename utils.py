@@ -142,15 +142,6 @@ if __name__ == "__main__":
                                 transform=transforms.Compose([VideoFilePathToTensor(max_len=16, fps=10, padding_mode='last')]),
                                 poseData=True)
 
-    # sample = basketball_dataset[3]
-    # print(len(basketball_dataset))
-    # video = sample['video']
-    # for i in range(0,15):
-    #     frame = transforms.ToPILImage()(video[:, i, :, :])
-    #     frame.show()
-    # print(sample['video_id'])
-    # print(video.size())
-
     print(len(basketball_dataset))
     with open("dataset/annotation_dict.json") as f:
         video_list = list(json.load(f).items())

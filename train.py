@@ -4,13 +4,10 @@ from __future__ import division
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import numpy as np
 import torchvision
 from torchvision import datasets, models, transforms
 from torch.utils.data import DataLoader, random_split
-import matplotlib.pyplot as plt
 import time
-import os
 
 from utils import BasketballDataset, VideoFilePathToTensor
 from C3D import C3D
@@ -33,8 +30,10 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
         for phase in ['train', 'val']:
             if phase == 'train':
                 model.train()  # Set model to training mode
+                print("Train")
             else:
                 model.eval()   # Set model to evaluate mode
+                print("Val")
 
             running_loss = 0.0
             running_corrects = 0
@@ -74,8 +73,8 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
-                        i += 1
-                        print("Epoch Progress: ", i*12/27201)
+                    i += 1
+                    print(phase," Progress: ", i*12/27201)
 
 
                 # statistics
@@ -85,6 +84,8 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
             epoch_loss = running_loss / len(dataloaders[phase].dataset)
             epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
 
+            time_elapsed = time.time() - since
+            print(phase, ' training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
             print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
             # deep copy the model

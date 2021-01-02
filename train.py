@@ -171,10 +171,15 @@ if __name__ == "__main__":
     basketball_dataset = BasketballDatasetTensor(annotation_dict="dataset/annotation_dict.json",
                                                 poseData=False)
 
-    train_subset, val_subset = random_split(
-    basketball_dataset, [27085, 10000], generator=torch.Generator().manual_seed(1))
+    train_subset, test_subset = random_split(
+    basketball_dataset, [32085, 5000], generator=torch.Generator().manual_seed(1))
+
+    train_subset, val_subset= random_split(
+        train_subset, [27085, 5000], generator=torch.Generator().manual_seed(1))
+
     train_loader = DataLoader(dataset=train_subset, shuffle=True, batch_size=batch_size)
-    val_loader = DataLoader(dataset=train_subset, shuffle=False, batch_size=batch_size)
+    val_loader = DataLoader(dataset=val_subset, shuffle=False, batch_size=batch_size)
+    test_loader = DataLoader(dataset=test_subset, shuffle=False, batch_size=batch_size)
 
     dataloaders_dict = {'train': train_loader, 'val': val_loader}
 
@@ -197,11 +202,13 @@ if __name__ == "__main__":
                 print("\t", name)
 
     # Observe that all parameters are being optimized
-    optimizer_ft = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
+    optimizer_ft = optim.Adam(params_to_update, lr=0.003)
 
     # Setup the loss fxn
     criterion = nn.CrossEntropyLoss()
 
     # Train and evaluate
     model, hist = train_model(model, dataloaders_dict, criterion, optimizer_ft, num_epochs=num_epochs)
+
+
 

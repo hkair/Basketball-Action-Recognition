@@ -115,6 +115,25 @@ class Identity(nn.Module):
     def forward(self, x):
         return x
 
+def check_accuracy(loader, model):
+    num_correct = 0
+    num_samples = 0
+    model.eval()
+
+    with torch.no_grad():
+        for x, y in loader:
+            x = x.to(device=device)
+            y = y.to(device=device)
+
+            scores = model(x)
+            _, predictions = scores.max(1)
+            num_correct += (predictions == y).sum()
+            num_samples += predictions.size(0)
+
+        print(f'Got {num_correct} / {num_samples} with accuracy {float(num_correct)/float(num_samples)*100:.2f}')
+
+    model.train()
+
 if __name__ == "__main__":
     print("PyTorch Version: ", torch.__version__)
     print("Torchvision Version: ", torchvision.__version__)
@@ -124,9 +143,6 @@ if __name__ == "__main__":
     print("Device Count: ", torch.cuda.device_count())
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    # Data Directory
-    data_dir = "./dataset/examples/"
 
     # 10 - Number of classes of basketball actionsn
     num_classes = 10
@@ -210,5 +226,11 @@ if __name__ == "__main__":
     # Train and evaluate
     model, hist = train_model(model, dataloaders_dict, criterion, optimizer_ft, num_epochs=num_epochs)
 
+    # Save Model
+    PATH = "model/"
+    torch.save(model.state_dict(), PATH + "c3d-basketball.pth")
+
+    # Check Accuracy with Test Set
+    check_accuracy(test_loader, model)
 
 

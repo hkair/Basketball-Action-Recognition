@@ -9,7 +9,7 @@ from torchvision import datasets, models, transforms
 from torch.utils.data import DataLoader, random_split
 import time
 
-from utils import BasketballDataset, VideoFilePathToTensor
+from utils import BasketballDataset, VideoFilePathToTensor, BasketballDatasetTensor
 from C3D import C3D
 
 import copy
@@ -108,6 +108,13 @@ def set_parameter_requires_grad(model, feature_extracting):
         for param in model.parameters():
             param.requires_grad = False
 
+class Identity(nn.Module):
+    def __init__(self):
+        super(Identity, self).__init__()
+
+    def forward(self, x):
+        return x
+
 if __name__ == "__main__":
     print("PyTorch Version: ", torch.__version__)
     print("Torchvision Version: ", torchvision.__version__)
@@ -137,12 +144,11 @@ if __name__ == "__main__":
     # change final fully-connected layer to output 10 classes and input to 184320
     set_parameter_requires_grad(model, feature_extract)
     # input of the next hidden layer
-    num_ftrs = model.fc7.in_features
+    num_ftrs = model.fc8.in_features
     # New Model is trained with 128x176 images
     # Calculation:
     model.fc6 = nn.Linear(15360, num_ftrs, bias=True)
-    # input of the final hidden layer
-    num_ftrs = model.fc8.in_features
+    model.fc7 = Identity()
     model.fc8 = nn.Linear(num_ftrs, num_classes, bias=True)
     print(model)
 
@@ -157,10 +163,13 @@ if __name__ == "__main__":
         print(" ")
 
     # Load Dataset
-    basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
-                                           label_dict="dataset/labels_dict.json",
-                                           transform=transforms.Compose(
-                                               [VideoFilePathToTensor(max_len=16, fps=10, padding_mode='last')]))
+    # basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
+    #                                        label_dict="dataset/labels_dict.json",
+    #                                        transform=transforms.Compose(
+    #                                            [VideoFilePathToTensor(max_len=16, fps=10, padding_mode='last')]))
+
+    basketball_dataset = BasketballDatasetTensor(annotation_dict="dataset/annotation_dict.json",
+                                                poseData=False)
 
     train_subset, val_subset = random_split(
     basketball_dataset, [27085, 10000], generator=torch.Generator().manual_seed(1))

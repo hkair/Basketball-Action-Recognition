@@ -26,16 +26,15 @@ class BasketballDataset(Dataset):
         return len(self.video_list)
 
     def __getitem__(self, idx):
-        print(idx)
         video_id = self.video_list[idx][0]
 
         # Transform Video to Tensor
         if self.transform:
             video = self.transform(self.video_dir+video_id+".mp4")
 
-        joints = np.load(self.video_dir+video_id+".npy", allow_pickle=True)
         encoding = np.squeeze(np.eye(10)[np.array([0,1,2,3,4,5,6,7,8,9]).reshape(-1)])
         if self.poseData:
+            joints = np.load(self.video_dir + video_id + ".npy", allow_pickle=True)
             sample = {'joints': joints, 'action': encoding[self.video_list[idx][1]-1]}
         else:
             sample = {'video': video, 'action': encoding[self.video_list[idx][1]-1]}

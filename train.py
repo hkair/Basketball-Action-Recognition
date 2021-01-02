@@ -45,8 +45,8 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
             for sample in dataloaders[phase]:
                 inputs = sample["video"]
                 labels = sample["action"]
-                # inputs = inputs.to(device)
-                # labels = labels.to(device)
+                inputs = inputs.to(device)
+                labels = labels.to(device)
 
                 # zero the parameter gradients
                 optimizer.zero_grad()
@@ -75,7 +75,7 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
                         loss.backward()
                         optimizer.step()
                         i += 1
-                        print(i*12/27201)
+                        print("Epoch Progress: ", i*12/27201)
 
 
                 # statistics
@@ -110,31 +110,33 @@ def set_parameter_requires_grad(model, feature_extracting):
 if __name__ == "__main__":
     print("PyTorch Version: ", torch.__version__)
     print("Torchvision Version: ", torchvision.__version__)
+    print("Current Device: ", torch.cuda.current_device())
+    print("Device: ", torch.cuda.device(0))
+    print("Cuda Is Available: ", torch.cuda.is_available())
+    print("Device Count: ", torch.cuda.device_count())
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # Data Directory
     data_dir = "./dataset/examples/"
 
     # 10 - Number of classes of basketball actionsn
     num_classes = 10
-
     # Batch size for training (change depending on how much memory you have)
     batch_size = 12
-
     # Number of epochs to train for
     num_epochs = 20
-
     # Flag for feature extracting. When False, we finetune the whole model,
     #   when True we only update the reshaped layer params
     feature_extract = True
 
     # Initialize C3D Model
     model = C3D(num_classes=101, pretrained=True)
-    print(model)
+
     # change final fully-connected layer to output 10 classes and input to 184320
     set_parameter_requires_grad(model, feature_extract)
-
     # input of the next hidden layer
     num_ftrs = model.fc7.in_features
-
     # New Model is trained with 128x176 images
     # Calculation:
     model.fc6 = nn.Linear(15360, num_ftrs, bias=True)
@@ -142,6 +144,16 @@ if __name__ == "__main__":
     num_ftrs = model.fc8.in_features
     model.fc8 = nn.Linear(num_ftrs, num_classes, bias=True)
     print(model)
+
+    # Put model into device after updating parameters
+    model = model.to(device)
+
+    if device.type == 'cuda':
+        print(torch.cuda.get_device_name(0))
+        print('Memory Usage:')
+        print('Allocated:', round(torch.cuda.memory_allocated(0) / 1024 ** 3, 1), 'GB')
+        print('Cached:   ', round(torch.cuda.memory_reserved(0) / 1024 ** 3, 1), 'GB')
+        print(" ")
 
     # Load Dataset
     basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
@@ -154,7 +166,6 @@ if __name__ == "__main__":
     train_loader = DataLoader(dataset=train_subset, shuffle=True, batch_size=batch_size)
     val_loader = DataLoader(dataset=train_subset, shuffle=False, batch_size=batch_size)
 
-    print(type(train_loader))
     dataloaders_dict = {'train': train_loader, 'val': val_loader}
 
     # Gather the parameters to be optimized/updated in this run. If we are

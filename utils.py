@@ -229,7 +229,7 @@ def VideoToTensor(video_id, data_dir="dataset/examples/", output_dir="tensor-dat
     cap.release()
     torch.save(frames, output_dir + video_id + ".pt")
 
-def convertAllVideo(path="dataset/annotation_dict.json"):
+def convertAllVideo(path="dataset/annotation_dict.json", data_dir="dataset/examples/", output_dir="tensor-dataset/"):
     # Let's convert all video to .pt files
     with open(path) as f:
         video_list = list(json.load(f).items())
@@ -239,7 +239,7 @@ def convertAllVideo(path="dataset/annotation_dict.json"):
         print(video_id[0])
         print("Video: ", i)
         print(i/37085)
-        VideoToTensor(video_id[0], max_len=16, fps=10, padding_mode='last')
+        VideoToTensor(video_id[0], data_dir, output_dir, max_len=16, fps=10, padding_mode='last')
         i += 1
 
 if __name__ == "__main__":
@@ -257,4 +257,4 @@ if __name__ == "__main__":
     # print(len(video_list))
     # print(basketball_dataset[1]['video'].shape)
 
-    convertAllVideo()
+    convertAllVideo("dataset/annotation_dict.json", "dataset/examples/", "tensor-dataset/")

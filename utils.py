@@ -242,6 +242,35 @@ def convertAllVideo(path="dataset/annotation_dict.json", data_dir="dataset/examp
         VideoToTensor(video_id[0], data_dir, output_dir, max_len=16, fps=10, padding_mode='last')
         i += 1
 
+def returnWeights(annotation_dict='dataset/annotation_dict.json', labels_dict='dataset/labels_dict.json'):
+    # Read Dictionary from dataset
+    with open(annotation_dict) as f:
+        annotation_dict = json.load(f)
+
+    def keystoint(x):
+        return {int(k): v for k, v in x.items()}
+
+    with open(labels_dict) as f:
+        labels_dict = json.load(f, object_hook=keystoint)
+
+    # Let's first visualize the distribution of actions in the
+    count_dict = dict()
+    for key in annotation_dict:
+        if labels_dict[annotation_dict[key]] in count_dict:
+            count_dict[labels_dict[annotation_dict[key]]] += 1
+        else:
+            count_dict[labels_dict[annotation_dict[key]]] = 1
+
+    for key in count_dict:
+        count_dict[key] = count_dict[key]/37085
+
+    weights = []
+    for key, val in labels_dict.items():
+        if val != "discard":
+            weights.append(count_dict[val])
+
+    return weights
+
 if __name__ == "__main__":
     # basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
     #                             label_dict="dataset/labels_dict.json",
@@ -257,4 +286,6 @@ if __name__ == "__main__":
     # print(len(video_list))
     # print(basketball_dataset[1]['video'].shape)
 
-    convertAllVideo("dataset/annotation_dict.json", "dataset/examples/", "tensor-dataset/")
+    #convertAllVideo("dataset/annotation_dict.json", "dataset/examples/", "tensor-dataset/")
+
+    print(returnWeights())

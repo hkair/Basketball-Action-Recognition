@@ -9,7 +9,7 @@ from torchvision import datasets, models, transforms
 from torch.utils.data import DataLoader, random_split
 import time
 
-from utils import BasketballDataset, VideoFilePathToTensor, BasketballDatasetTensor
+from utils import BasketballDataset, VideoFilePathToTensor, BasketballDatasetTensor, returnWeights
 from C3D import C3D
 
 import copy
@@ -220,8 +220,11 @@ if __name__ == "__main__":
     # Observe that all parameters are being optimized
     optimizer_ft = optim.Adam(params_to_update, lr=0.003)
 
+    w = returnWeights()
+    weights = torch.FloatTensor(w).cuda()
+    print(weights)
     # Setup the loss fxn
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(weight=weights)
 
     # Train and evaluate
     model, hist = train_model(model, dataloaders_dict, criterion, optimizer_ft, num_epochs=num_epochs)

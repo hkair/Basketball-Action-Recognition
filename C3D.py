@@ -68,7 +68,8 @@ class C3D(nn.Module):
         x = self.relu(self.fc7(x))
         x = self.dropout(x)
 
-        logits = self.fc8(x)
+        m = nn.Softmax(dim=1)
+        logits = m(self.fc8(x))
 
         return logits
 

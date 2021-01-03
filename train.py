@@ -69,6 +69,7 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
 
                     _, preds = torch.max(outputs, 1)
 
+
                     # backward + optimize only if in training phase
                     if phase == 'train':
                         loss.backward()
@@ -121,14 +122,23 @@ def check_accuracy(loader, model):
     model.eval()
 
     with torch.no_grad():
-        for x, y in loader:
-            x = x.to(device=device)
-            y = y.to(device=device)
+        i = 12
+        for sample in loader:
+            x = sample["video"].to(device=device)
+            y = sample["action"].to(device=device)
 
             scores = model(x)
-            _, predictions = scores.max(1)
+            print(scores)
+            predictions = scores.argmax (1)
+            y = y.argmax (1)
+
+            print(y)
+            print(predictions)
+
             num_correct += (predictions == y).sum()
             num_samples += predictions.size(0)
+            print(i/5000)
+            i += 12
 
         print(f'Got {num_correct} / {num_samples} with accuracy {float(num_correct)/float(num_samples)*100:.2f}')
 
@@ -190,12 +200,13 @@ if __name__ == "__main__":
     train_subset, test_subset = random_split(
     basketball_dataset, [32085, 5000], generator=torch.Generator().manual_seed(1))
 
-    train_subset, val_subset= random_split(
+    train_subset, val_subset = random_split(
         train_subset, [27085, 5000], generator=torch.Generator().manual_seed(1))
 
     train_loader = DataLoader(dataset=train_subset, shuffle=True, batch_size=batch_size)
     val_loader = DataLoader(dataset=val_subset, shuffle=False, batch_size=batch_size)
     test_loader = DataLoader(dataset=test_subset, shuffle=False, batch_size=batch_size)
+
 
     dataloaders_dict = {'train': train_loader, 'val': val_loader}
 

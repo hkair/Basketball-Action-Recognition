@@ -154,7 +154,7 @@ if __name__ == "__main__":
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # 10 - Number of classes of basketball actionsn
+    # 10 - Number of classes of basketball actions
     num_classes = 10
     # Batch size for training (change depending on how much memory you have)
     batch_size = 12
@@ -188,14 +188,14 @@ if __name__ == "__main__":
         print('Cached:   ', round(torch.cuda.memory_reserved(0) / 1024 ** 3, 1), 'GB')
         print(" ")
 
-    # Load Dataset
-    # basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
-    #                                        label_dict="dataset/labels_dict.json",
-    #                                        transform=transforms.Compose(
-    #                                            [VideoFilePathToTensor(max_len=16, fps=10, padding_mode='last')]))
+    #Load Dataset
+    basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
+                                           label_dict="dataset/labels_dict.json",
+                                           transform=transforms.Compose(
+                                               [VideoFilePathToTensor(max_len=16, fps=10, padding_mode='last')]))
 
-    basketball_dataset = BasketballDatasetTensor(annotation_dict="dataset/annotation_dict.json",
-                                                poseData=False)
+    # basketball_dataset = BasketballDatasetTensor(annotation_dict="dataset/annotation_dict.json",
+    #                                             poseData=False)
 
     train_subset, test_subset = random_split(
     basketball_dataset, [32085, 5000], generator=torch.Generator().manual_seed(1))

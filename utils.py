@@ -35,9 +35,9 @@ class BasketballDataset(Dataset):
         encoding = np.squeeze(np.eye(10)[np.array([0,1,2,3,4,5,6,7,8,9]).reshape(-1)])
         if self.poseData:
             joints = np.load(self.video_dir + video_id + ".npy", allow_pickle=True)
-            sample = {'joints': joints, 'action': encoding[self.video_list[idx][1]-1]}
+            sample = {'video_id': video_id, 'joints': joints, 'action': torch.from_numpy(np.array(encoding[self.video_list[idx][1]-1])),'class': self.video_list[idx][1]}
         else:
-            sample = {'video': video, 'action': encoding[self.video_list[idx][1]-1]}
+            sample = {'video_id': video_id, 'video': video, 'action': torch.from_numpy(np.array(encoding[self.video_list[idx][1]-1])), 'class': self.video_list[idx][1]}
 
         return sample
 
@@ -156,12 +156,13 @@ class BasketballDatasetTensor(Dataset):
         video_id = self.video_list[idx][0]
 
         encoding = np.squeeze(np.eye(10)[np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).reshape(-1)])
+        #print(encoding)
         if self.poseData:
             joints = np.load(self.video_dir + video_id + ".npy", allow_pickle=True)
-            sample = {'joints': joints, 'action': encoding[self.video_list[idx][1] - 1]}
+            sample = {'video_id': video_id, 'joints': joints, 'action': torch.from_numpy(np.array(encoding[self.video_list[idx][1]])), 'class': self.video_list[idx][1]}
         else:
             video = torch.load(self.data_dir + video_id + ".pt")
-            sample = {'video': video, 'action': encoding[self.video_list[idx][1] - 1]}
+            sample = {'video_id': video_id, 'video': video, 'action': torch.from_numpy(np.array(encoding[self.video_list[idx][1]])), 'class': self.video_list[idx][1]}
 
         return sample
 
@@ -280,12 +281,5 @@ if __name__ == "__main__":
     basketball_dataset = BasketballDatasetTensor(annotation_dict="dataset/annotation_dict.json",
                                                 poseData=False)
 
-    # print(len(basketball_dataset))
-    # with open("dataset/annotation_dict.json") as f:
-    #     video_list = list(json.load(f).items())
-    # print(len(video_list))
-    # print(basketball_dataset[1]['video'].shape)
-
-    #convertAllVideo("dataset/annotation_dict.json", "dataset/examples/", "tensor-dataset/")
-
-    print(returnWeights())
+    print(basketball_dataset[1]['action'])
+    print(basketball_dataset[1]['class'])

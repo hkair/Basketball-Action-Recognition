@@ -14,7 +14,7 @@ from C3D import C3D
 
 import copy
 
-def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_inception=False):
+def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
     since = time.time()
 
     val_acc_history = []
@@ -57,18 +57,11 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
                     # Special case for inception because in training it has an auxiliary output. In train
                     #   mode we calculate the loss by summing the final output and the auxiliary output
                     #   but in testing we only consider the final output.
-                    if is_inception and phase == 'train':
-                        # From https://discuss.pytorch.org/t/how-to-optimize-inception-model-with-auxiliary-classifiers/7958
-                        outputs, aux_outputs = model(inputs)
-                        loss1 = criterion(outputs, labels)
-                        loss2 = criterion(aux_outputs, labels)
-                        loss = loss1 + 0.4*loss2
-                    else:
-                        outputs = model(inputs)
-                        loss = criterion(outputs, torch.max(labels, 1)[1])
+                   
+                    outputs = model(inputs)
+                    loss = criterion(outputs, torch.max(labels, 1)[1])
 
                     _, preds = torch.max(outputs, 1)
-
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
@@ -206,7 +199,6 @@ if __name__ == "__main__":
     train_loader = DataLoader(dataset=train_subset, shuffle=True, batch_size=batch_size)
     val_loader = DataLoader(dataset=val_subset, shuffle=False, batch_size=batch_size)
     test_loader = DataLoader(dataset=test_subset, shuffle=False, batch_size=batch_size)
-
 
     dataloaders_dict = {'train': train_loader, 'val': val_loader}
 

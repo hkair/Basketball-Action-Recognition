@@ -5,19 +5,23 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
-from torchvision import datasets, models, transforms
+from torchvision import models, transforms
 from torch.utils.data import DataLoader, random_split
 import time
+import matplotlib.pyplot as plt
 
 from utils import BasketballDataset, VideoFilePathToTensor, BasketballDatasetTensor, returnWeights
-from C3D import C3D
 
 import copy
+
 
 def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
     since = time.time()
 
+    train_acc_history = []
     val_acc_history = []
+    train_loss_history = []
+    val_loss_history = []
 
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
@@ -32,7 +36,7 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
                 model.train()  # Set model to training mode
                 print("Train")
             else:
-                model.eval()   # Set model to evaluate mode
+                model.eval()  # Set model to evaluate mode
                 print("Val")
 
             running_loss = 0.0
@@ -53,23 +57,20 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
                 # forward
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
-                    # Get model outputs and calculate loss
-                    # Special case for inception because in training it has an auxiliary output. In train
-                    #   mode we calculate the loss by summing the final output and the auxiliary output
-                    #   but in testing we only consider the final output.
-                   
+
                     outputs = model(inputs)
                     loss = criterion(outputs, torch.max(labels, 1)[1])
 
                     _, preds = torch.max(outputs, 1)
+                    print(preds)
+                    print(torch.max(labels, 1)[1])
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
                     i += 1
-                    print(phase," Progress: ", i*12/27201)
-
+                    print(phase, " Progress: ", i * 12 / 27201)
 
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
@@ -88,6 +89,10 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
                 best_model_wts = copy.deepcopy(model.state_dict())
             if phase == 'val':
                 val_acc_history.append(epoch_acc)
+                val_loss_history.append(epoch_loss)
+            if phase == 'train':
+                train_acc_history.append(epoch_acc)
+                train_loss_history.append(epoch_loss)
 
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
@@ -95,12 +100,7 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
 
     # load best model weights
     model.load_state_dict(best_model_wts)
-    return model, val_acc_history
-
-def set_parameter_requires_grad(model, feature_extracting):
-    if feature_extracting:
-        for param in model.parameters():
-            param.requires_grad = False
+    return model, val_acc_history, train_acc_history, val_loss_history, train_loss_history
 
 class Identity(nn.Module):
     def __init__(self):
@@ -152,27 +152,42 @@ if __name__ == "__main__":
     # Batch size for training (change depending on how much memory you have)
     batch_size = 12
     # Number of epochs to train for
-    num_epochs = 20
-    # Flag for feature extracting. When False, we finetune the whole model,
-    #   when True we only update the reshaped layer params
-    feature_extract = True
+    num_epochs = 40
+    # Unfreeze Layers
+    layers = ['layer3', 'layer4', 'fc']
 
     # Initialize C3D Model
-    model = C3D(num_classes=101, pretrained=True)
+    #model = C3D(num_classes=101, pretrained=True)
+    # Initialize C3D Model
+    model = models.video.r2plus1d_18(pretrained=False, progress=True)
 
-    # change final fully-connected layer to output 10 classes and input to 184320
-    set_parameter_requires_grad(model, feature_extract)
+    # change final fully-connected layer to output 10 classes
+    for param in model.parameters():
+        param.requires_grad = False
+
+    for name, param in model.named_parameters():
+        for layer in layers:
+            if layer in name:
+                param.requires_grad = True
+
     # input of the next hidden layer
-    num_ftrs = model.fc8.in_features
+    num_ftrs = model.fc.in_features
+    print(num_ftrs)
     # New Model is trained with 128x176 images
     # Calculation:
-    model.fc6 = nn.Linear(15360, num_ftrs, bias=True)
-    model.fc7 = Identity()
-    model.fc8 = nn.Linear(num_ftrs, num_classes, bias=True)
+    model.fc = nn.Linear(num_ftrs, num_classes, bias=True)
     print(model)
 
     # Put model into device after updating parameters
     model = model.to(device)
+
+    params_to_update = model.parameters()
+    print("Params to learn:")
+    params_to_update = []
+    for name, param in model.named_parameters():
+        if param.requires_grad == True:
+            params_to_update.append(param)
+            print("\t", name)
 
     if device.type == 'cuda':
         print(torch.cuda.get_device_name(0))
@@ -182,13 +197,13 @@ if __name__ == "__main__":
         print(" ")
 
     #Load Dataset
-    basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
-                                           label_dict="dataset/labels_dict.json",
-                                           transform=transforms.Compose(
-                                               [VideoFilePathToTensor(max_len=16, fps=10, padding_mode='last')]))
+    #basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
+    #                                       label_dict="dataset/labels_dict.json",
+    #                                       transform=transforms.Compose(
+    #                                           [VideoFilePathToTensor(max_len=16, fps=10, padding_mode='last')]))
 
-    # basketball_dataset = BasketballDatasetTensor(annotation_dict="dataset/annotation_dict.json",
-    #                                             poseData=False)
+    basketball_dataset = BasketballDatasetTensor(annotation_dict="dataset/annotation_dict.json",
+                                                 poseData=False)
 
     train_subset, test_subset = random_split(
     basketball_dataset, [32085, 5000], generator=torch.Generator().manual_seed(1))
@@ -202,35 +217,32 @@ if __name__ == "__main__":
 
     dataloaders_dict = {'train': train_loader, 'val': val_loader}
 
-    # Gather the parameters to be optimized/updated in this run. If we are
-    #  finetuning we will be updating all parameters. However, if we are
-    #  doing feature extract method, we will only update the parameters
-    #  that we have just initialized, i.e. the parameters with requires_grad
-    #  is True.
-    params_to_update = model.parameters()
-    print("Params to learn:")
-    if feature_extract:
-        params_to_update = []
-        for name, param in model.named_parameters():
-            if param.requires_grad == True:
-                params_to_update.append(param)
-                print("\t", name)
-    else:
-        for name, param in model.named_parameters():
-            if param.requires_grad == True:
-                print("\t", name)
+    # Train
+    optimizer_ft = optim.Adam(params_to_update, lr=0.01)
 
-    # Observe that all parameters are being optimized
-    optimizer_ft = optim.Adam(params_to_update, lr=0.003)
-
-    w = returnWeights()
-    weights = torch.FloatTensor(w).cuda()
-    print(weights)
-    # Setup the loss fxn
-    criterion = nn.CrossEntropyLoss(weight=weights)
+    criterion = nn.CrossEntropyLoss()
 
     # Train and evaluate
-    model, hist = train_model(model, dataloaders_dict, criterion, optimizer_ft, num_epochs=num_epochs)
+    model, val_acc_history, train_acc_history, val_loss_history, train_loss_history = train_model(model,
+                                                                                                  dataloaders_dict,
+                                                                                                  criterion,
+                                                                                                  optimizer_ft,
+                                                                                                  num_epochs=num_epochs)
+
+    print("Best Validation Loss: ", min(val_loss_history), "Epoch: ", val_loss_history.index(min(val_loss_history)))
+    print("Best Training Loss: ", min(train_loss_history), "Epoch: ", train_loss_history.index(min(train_loss_history)))
+
+    # Plot Accuracy
+    plt.plot(train_acc_history)
+    plt.plot(val_acc_history)
+
+    # Plot Loss
+    plt.plot(train_loss_history)
+    plt.plot(val_loss_history)
+
+    # Save Model
+    PATH = "model/small_dataset/"
+    torch.save(model.state_dict(), PATH + "c3d-basketball-overfit.pth")
 
     # Save Model
     PATH = "model/"

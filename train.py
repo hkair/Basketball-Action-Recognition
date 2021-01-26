@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from utils import BasketballDataset, VideoFilePathToTensor, BasketballDatasetTensor, returnWeights
 
 import copy
-
+from tqdm import tqdm
 
 def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
     since = time.time()
@@ -42,10 +42,11 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
             running_loss = 0.0
             running_corrects = 0
 
-            i = 1
+            train_n_total = 1
 
+            pbar = tqdm(dataloaders[phase])
             # Iterate over data.
-            for sample in dataloaders[phase]:
+            for sample in pbar:
                 inputs = sample["video"]
                 labels = sample["action"]
                 inputs = inputs.to(device)
@@ -62,19 +63,20 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
                     loss = criterion(outputs, torch.max(labels, 1)[1])
 
                     _, preds = torch.max(outputs, 1)
-                    print(preds)
-                    print(torch.max(labels, 1)[1])
+                    #print(preds)
+                    #print(torch.max(labels, 1)[1])
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
-                    i += 1
-                    print(phase, " Progress: ", i * 12 / 27201)
 
                 # statistics
                 running_loss += loss.item() * inputs.size(0)
                 running_corrects += torch.sum(preds == torch.max(labels, 1)[1])
+
+                pbar.set_description('Phase: {} || Epoch: {} || Loss {:.5f} '.format(phase, epoch, running_loss / train_n_total))
+                train_n_total += 1
 
             epoch_loss = running_loss / len(dataloaders[phase].dataset)
             epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
@@ -101,13 +103,6 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
     # load best model weights
     model.load_state_dict(best_model_wts)
     return model, val_acc_history, train_acc_history, val_loss_history, train_loss_history
-
-class Identity(nn.Module):
-    def __init__(self):
-        super(Identity, self).__init__()
-
-    def forward(self, x):
-        return x
 
 def check_accuracy(loader, model):
     num_correct = 0

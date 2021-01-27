@@ -203,9 +203,6 @@ if __name__ == "__main__":
                                           poseData=False)
                                           #transform=video_augmentation)
 
-    #basketball_dataset = BasketballDatasetTensor(annotation_dict="dataset/annotation_dict.json",
-    #                                             poseData=False)
-
     train_subset, test_subset = random_split(
     basketball_dataset, [32085, 5000], generator=torch.Generator().manual_seed(1))
 

@@ -1,6 +1,5 @@
 # Util.py
 import json
-import glob
 import numpy as np
 import cv2
 
@@ -11,11 +10,9 @@ from torchvision import transforms
 class BasketballDataset(Dataset):
     """SpaceJam: a Dataset for Basketball Action Recognition."""
 
-    def __init__(self, annotation_dict, label_dict, video_dir="dataset/examples/", transform=None, poseData=False):
+    def __init__(self, annotation_dict, video_dir="dataset/examples/", transform=None, poseData=False):
         with open(annotation_dict) as f:
             self.video_list = list(json.load(f).items())
-        with open(label_dict) as l:
-            self.label_dict = json.load(l, object_hook=self.keystoint)
 
         self.video_dir = video_dir
         self.poseData = poseData
@@ -27,23 +24,39 @@ class BasketballDataset(Dataset):
 
     def __getitem__(self, idx):
         video_id = self.video_list[idx][0]
-
-        # Transform Video to Tensor
-        if self.transform:
-            video = self.transform(self.video_dir+video_id+".mp4")
-
         encoding = np.squeeze(np.eye(10)[np.array([0,1,2,3,4,5,6,7,8,9]).reshape(-1)])
         if self.poseData:
             joints = np.load(self.video_dir + video_id + ".npy", allow_pickle=True)
             sample = {'video_id': video_id, 'joints': joints, 'action': torch.from_numpy(np.array(encoding[self.video_list[idx][1]])),'class': self.video_list[idx][1]}
         else:
-            sample = {'video_id': video_id, 'video': video, 'action': torch.from_numpy(np.array(encoding[self.video_list[idx][1]])), 'class': self.video_list[idx][1]}
+            video = self.VideoToNumpy(video_id)
+            sample = {'video_id': video_id, 'video': torch.from_numpy(video), 'action': torch.from_numpy(np.array(encoding[self.video_list[idx][1]])), 'class': self.video_list[idx][1]}
 
         return sample
 
     def keystoint(self, x):
         return {int(k): v for k, v in x.items()}
 
+    def VideoToNumpy(self, video_id):
+        # get video
+        video = cv2.VideoCapture(self.video_dir + video_id + ".mp4")
+
+        if not video.isOpened():
+            raise NameError("Video file corrupted, or improper video name")
+
+        video_frames = []
+        while (video.isOpened()):
+            # read video
+            success, frame = video.read()
+            if not success:
+                break
+
+            frame = np.asarray([frame[..., i] for i in range(frame.shape[-1])]).astype(float)
+            video_frames.append(frame)
+
+        video.release()
+        assert len(video_frames) == 16
+        return np.transpose(np.asarray(video_frames), (1,0,2,3))
 
 class VideoFilePathToTensor(object):
     """ load video at given file path to torch.Tensor (C x L x H x W, C = 3)
@@ -230,7 +243,29 @@ def VideoToTensor(video_id, data_dir="dataset/examples/", output_dir="tensor-dat
     cap.release()
     torch.save(frames, output_dir + video_id + ".pt")
 
-def convertAllVideo(path="dataset/annotation_dict.json", data_dir="dataset/examples/", output_dir="tensor-dataset/"):
+def VideoToNumpy(video_id, data_dir="dataset/examples/", output_dir="numpy-dataset/"):
+    # get video
+    video = cv2.VideoCapture(data_dir+video_id+".mp4")
+
+    if not video.isOpened():
+        raise NameError("Video file corrupted, or improper video name")
+
+    video_frames = []
+    while (video.isOpened()):
+        # read video
+        success, frame = video.read()
+
+        if not success:
+            break
+
+        frame = np.asarray([frame[..., i] for i in range(frame.shape[-1])])
+        video_frames.append(frame)
+
+    video.release()
+    assert len(video_frames) == 16
+    np.save(output_dir+video_id+".npy", np.transpose(np.asarray(video_frames), (1,0,2,3)))
+
+def convertAllVideoTensor(path="dataset/annotation_dict.json", data_dir="dataset/examples/", output_dir="tensor-dataset/"):
     # Let's convert all video to .pt files
     with open(path) as f:
         video_list = list(json.load(f).items())
@@ -241,6 +276,19 @@ def convertAllVideo(path="dataset/annotation_dict.json", data_dir="dataset/examp
         print("Video: ", i)
         print(i/37085)
         VideoToTensor(video_id[0], data_dir, output_dir, max_len=16, fps=10, padding_mode='last')
+        i += 1
+
+def convertAllVideoNumpy(path="dataset/annotation_dict.json", data_dir="dataset/examples/", output_dir="numpy-dataset/"):
+    # Let's convert all video to .npy files
+    with open(path) as f:
+        video_list = list(json.load(f).items())
+
+    i = 1
+    for video_id in video_list:
+        print(video_id[0])
+        print("Video: ", i)
+        print(i/37085)
+        VideoToNumpy(video_id[0], data_dir, output_dir)
         i += 1
 
 def returnWeights(annotation_dict='dataset/annotation_dict.json', labels_dict='dataset/labels_dict.json'):
@@ -273,13 +321,15 @@ def returnWeights(annotation_dict='dataset/annotation_dict.json', labels_dict='d
     return weights
 
 if __name__ == "__main__":
+
     # basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
-    #                             label_dict="dataset/labels_dict.json",
-    #                             transform=transforms.Compose([VideoFilePathToTensor(max_len=16, fps=10, padding_mode='last')]),
-    #                             poseData=True)
+    #                                             poseData=False)
 
-    basketball_dataset = BasketballDatasetTensor(annotation_dict="dataset/annotation_dict.json",
-                                                poseData=False)
+    # basketball_dataset = BasketballDatasetTensor(annotation_dict="dataset/annotation_dict.json",
+    #                                             poseData=False)
 
-    print(basketball_dataset[1]['action'])
-    print(basketball_dataset[1]['class'])
+    # print(basketball_dataset[1]['action'])
+    # print(basketball_dataset[1]['class'])
+
+    convertAllVideoNumpy()
+

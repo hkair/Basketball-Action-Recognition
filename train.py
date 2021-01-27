@@ -14,6 +14,7 @@ from utils import BasketballDataset, VideoFilePathToTensor, BasketballDatasetTen
 
 import copy
 from tqdm import tqdm
+from vidaug import augmentors as vidaug
 
 def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
     since = time.time()
@@ -47,7 +48,7 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
             pbar = tqdm(dataloaders[phase])
             # Iterate over data.
             for sample in pbar:
-                inputs = sample["video"]
+                inputs = sample["video"].float()
                 labels = sample["action"]
                 inputs = inputs.to(device)
                 labels = labels.to(device)
@@ -147,12 +148,11 @@ if __name__ == "__main__":
     # Batch size for training (change depending on how much memory you have)
     batch_size = 12
     # Number of epochs to train for
-    num_epochs = 40
+    num_epochs = 20
     # Unfreeze Layers
     layers = ['layer3', 'layer4', 'fc']
 
     # Initialize C3D Model
-    #model = C3D(num_classes=101, pretrained=True)
     # Initialize C3D Model
     model = models.video.r2plus1d_18(pretrained=False, progress=True)
 
@@ -191,14 +191,20 @@ if __name__ == "__main__":
         print('Cached:   ', round(torch.cuda.memory_reserved(0) / 1024 ** 3, 1), 'GB')
         print(" ")
 
-    #Load Dataset
-    #basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
-    #                                       label_dict="dataset/labels_dict.json",
-    #                                       transform=transforms.Compose(
-    #                                           [VideoFilePathToTensor(max_len=16, fps=10, padding_mode='last')]))
+    # Transforms
+    sometimes = lambda aug: vidaug.Sometimes(0.5, aug)  # Used to apply augmentor with 50% probability
+    video_augmentation = vidaug.Sequential([
+        sometimes(vidaug.Salt()),
+        sometimes(vidaug.Pepper()),
+    ], random_order=True)
 
-    basketball_dataset = BasketballDatasetTensor(annotation_dict="dataset/annotation_dict.json",
-                                                 poseData=False)
+    #Load Dataset
+    basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
+                                          poseData=False)
+                                          #transform=video_augmentation)
+
+    #basketball_dataset = BasketballDatasetTensor(annotation_dict="dataset/annotation_dict.json",
+    #                                             poseData=False)
 
     train_subset, test_subset = random_split(
     basketball_dataset, [32085, 5000], generator=torch.Generator().manual_seed(1))

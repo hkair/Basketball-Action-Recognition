@@ -10,9 +10,17 @@ from torchvision import transforms
 class BasketballDataset(Dataset):
     """SpaceJam: a Dataset for Basketball Action Recognition."""
 
-    def __init__(self, annotation_dict, video_dir="dataset/examples/", transform=None, poseData=False):
+    def __init__(self, annotation_dict, augmented_dict, video_dir="dataset/examples/", augmented_dir="dataset/augmented-examples/", augment=True, transform=None, poseData=False):
         with open(annotation_dict) as f:
             self.video_list = list(json.load(f).items())
+
+        if augment == True:
+            self.augment = augment
+            with open(augmented_dict) as f:
+                augmented_list = list(json.load(f).items())
+            self.augmented_dir = augmented_dir
+            # extend with augmented data
+            self.video_list.extend(augmented_list)
 
         self.video_dir = video_dir
         self.poseData = poseData
@@ -25,7 +33,7 @@ class BasketballDataset(Dataset):
     def __getitem__(self, idx):
         video_id = self.video_list[idx][0]
         encoding = np.squeeze(np.eye(10)[np.array([0,1,2,3,4,5,6,7,8,9]).reshape(-1)])
-        if self.poseData:
+        if self.poseData and self.augment==False:
             joints = np.load(self.video_dir + video_id + ".npy", allow_pickle=True)
             sample = {'video_id': video_id, 'joints': joints, 'action': torch.from_numpy(np.array(encoding[self.video_list[idx][1]])), 'class': self.video_list[idx][1]}
         else:
@@ -42,7 +50,9 @@ class BasketballDataset(Dataset):
         video = cv2.VideoCapture(self.video_dir + video_id + ".mp4")
 
         if not video.isOpened():
-            raise NameError("Video file corrupted, or improper video name")
+            video = cv2.VideoCapture(self.augmented_dir + video_id + ".mp4")
+        if not video.isOpened():
+            raise Exception("Video file not readable")
 
         video_frames = []
         while (video.isOpened()):
@@ -261,14 +271,9 @@ def returnWeights(annotation_dict='dataset/annotation_dict.json', labels_dict='d
 
 if __name__ == "__main__":
 
-    # basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
-    #                                             poseData=False)
+    basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
+                                           augmented_dict="dataset/augmented_annotation_dict.json")
 
-    # basketball_dataset = BasketballDatasetTensor(annotation_dict="dataset/annotation_dict.json",
-    #                                             poseData=False)
-
-    # print(basketball_dataset[1]['action'])
-    # print(basketball_dataset[1]['class'])
-
-    convertAllVideoNumpy()
-
+    print(basketball_dataset[1]['action'])
+    print(basketball_dataset[1]['class'])
+    print(len(basketball_dataset))

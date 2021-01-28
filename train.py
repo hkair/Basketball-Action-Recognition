@@ -33,10 +33,8 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
         for phase in ['train', 'val']:
             if phase == 'train':
                 model.train()  # Set model to training mode
-                print("Train")
             else:
                 model.eval()  # Set model to evaluate mode
-                print("Val")
 
             running_loss = 0.0
             running_corrects = 0
@@ -197,17 +195,14 @@ if __name__ == "__main__":
     ], random_order=True)
 
     #Load Dataset
-    #basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
-    #                                      poseData=False)
-
-    basketball_dataset = BasketballDatasetTensor(annotation_dict="dataset/annotation_dict.json",
-                                           poseData=False)
+    basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
+                                           augmented_dict="dataset/augmented_annotation_dict.json")
 
     train_subset, test_subset = random_split(
-    basketball_dataset, [32085, 5000], generator=torch.Generator().manual_seed(1))
+    basketball_dataset, [44911, 4990], generator=torch.Generator().manual_seed(1))
 
     train_subset, val_subset = random_split(
-        train_subset, [27085, 5000], generator=torch.Generator().manual_seed(1))
+        train_subset, [34931, 9980], generator=torch.Generator().manual_seed(1))
 
     train_loader = DataLoader(dataset=train_subset, shuffle=True, batch_size=batch_size)
     val_loader = DataLoader(dataset=val_subset, shuffle=False, batch_size=batch_size)

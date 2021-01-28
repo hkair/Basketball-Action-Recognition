@@ -27,7 +27,7 @@ class BasketballDataset(Dataset):
         encoding = np.squeeze(np.eye(10)[np.array([0,1,2,3,4,5,6,7,8,9]).reshape(-1)])
         if self.poseData:
             joints = np.load(self.video_dir + video_id + ".npy", allow_pickle=True)
-            sample = {'video_id': video_id, 'joints': joints, 'action': torch.from_numpy(np.array(encoding[self.video_list[idx][1]])),'class': self.video_list[idx][1]}
+            sample = {'video_id': video_id, 'joints': joints, 'action': torch.from_numpy(np.array(encoding[self.video_list[idx][1]])), 'class': self.video_list[idx][1]}
         else:
             video = self.VideoToNumpy(video_id)
             sample = {'video_id': video_id, 'video': torch.from_numpy(video), 'action': torch.from_numpy(np.array(encoding[self.video_list[idx][1]])), 'class': self.video_list[idx][1]}

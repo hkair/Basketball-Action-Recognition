@@ -5,12 +5,12 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
-from torchvision import models, transforms
+from torchvision import models
 from torch.utils.data import DataLoader, random_split
 import time
 import matplotlib.pyplot as plt
 
-from utils import BasketballDataset, VideoFilePathToTensor, BasketballDatasetTensor, returnWeights
+from utils import BasketballDataset, BasketballDatasetTensor, BasketballDatasetNumpy
 
 import copy
 from tqdm import tqdm
@@ -28,8 +28,6 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
     best_acc = 0.0
 
     for epoch in range(num_epochs):
-        print('Epoch {}/{}'.format(epoch, num_epochs - 1))
-        print('-' * 10)
 
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
@@ -199,9 +197,11 @@ if __name__ == "__main__":
     ], random_order=True)
 
     #Load Dataset
-    basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
-                                          poseData=False)
-                                          #transform=video_augmentation)
+    #basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
+    #                                      poseData=False)
+
+    basketball_dataset = BasketballDatasetTensor(annotation_dict="dataset/annotation_dict.json",
+                                           poseData=False)
 
     train_subset, test_subset = random_split(
     basketball_dataset, [32085, 5000], generator=torch.Generator().manual_seed(1))

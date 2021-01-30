@@ -44,7 +44,7 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
             pbar = tqdm(dataloaders[phase])
             # Iterate over data.
             for sample in pbar:
-                inputs = sample["video"].float()
+                inputs = sample["video"]
                 labels = sample["action"]
                 inputs = inputs.to(device)
                 labels = labels.to(device)

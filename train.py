@@ -1,49 +1,96 @@
 from __future__ import print_function
 from __future__ import division
 
+import numpy as np
+import copy
+import time
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+from easydict import EasyDict
+from vidaug import augmentors as vidaug
+from sklearn.metrics import confusion_matrix
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
 from torchvision import models
 from torch.utils.data import DataLoader, random_split
-import time
-import matplotlib.pyplot as plt
 
 from dataset import BasketballDataset
-from utils.checkpoints import save_weights, load_weights
+from utils.checkpoints import init_session_history, save_weights, load_weights, write_history, read_history, plot_curves
+from utils.metrics import get_acc_f1_precision_recall
 
-import copy
-from tqdm import tqdm
-from vidaug import augmentors as vidaug
+args = EasyDict({
 
-def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
+    'base_model_name': 'r2plus1d_multiclass',
+
+    # training/model params
+    'pretrained': True,
+    'lr': 0.01,
+    'start_epoch': 1,
+    'num_epochs': 25,
+    'layers_list': ['layer3', 'layer4', 'fc'],
+    'continue_epoch': False,
+
+    # Dataset params
+    'num_classes': 10,
+    'batch_size': 8,
+
+    # Path params
+    'annotation_path': "dataset/annotation_dict.json",
+    'augmented_annotation_path': "dataset/augmented_annotation_dict.json",
+    'model_path': "model/r2plus1d_augmented/",
+    'history_path': "histories/history_r2plus1d_augmented.txt"
+})
+
+def train_model(model, base_model_name, dataloaders, criterion, optimizer, args, start_epoch=1, num_epochs=25):
+    """
+    Trains the 3D CNN Model
+    :param model: Model object that we will train
+    :param base_model_name: The base name of the model
+    :param dataloaders: A dictionary of train and validation dataloader
+    :param criterion: Pytorch Criterion Instance
+    :param optimizer: Pytorch Optimizer Instance
+    :param num_epochs: Number of epochs during training
+    :return: model, train_loss_history, val_loss_history, train_acc_history, val_acc_history, train_f1_score, val_f1_score, plot_epoch
+    """
+
+    # Initializes Session History in the history file
+    init_session_history(args)
     since = time.time()
 
     train_acc_history = []
     val_acc_history = []
     train_loss_history = []
     val_loss_history = []
+    train_f1_score = []
+    val_f1_score = []
+    plot_epoch = []
 
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
 
-    for epoch in range(num_epochs):
+    for epoch in range(start_epoch, num_epochs):
 
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
             if phase == 'train':
                 model.train()  # Set model to training mode
+                train_pred_classes = []
+                train_ground_truths = []
             else:
                 model.eval()  # Set model to evaluate mode
+                val_pred_classes = []
+                val_ground_truths = []
 
             running_loss = 0.0
             running_corrects = 0
-
             train_n_total = 1
 
             pbar = tqdm(dataloaders[phase])
             # Iterate over data.
+            i = 0
             for sample in pbar:
                 inputs = sample["video"]
                 labels = sample["action"]
@@ -64,6 +111,13 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
                     #print(preds)
                     #print(torch.max(labels, 1)[1])
 
+                    if phase == 'train':
+                        train_pred_classes.extend(preds.detach().cpu().numpy())
+                        train_ground_truths.extend(torch.max(labels, 1)[1].detach().cpu().numpy())
+                    else:
+                        val_pred_classes.extend(preds.detach().cpu().numpy())
+                        val_ground_truths.extend(torch.max(labels, 1)[1].detach().cpu().numpy())
+
                     # backward + optimize only if in training phase
                     if phase == 'train':
                         loss.backward()
@@ -75,24 +129,81 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
 
                 pbar.set_description('Phase: {} || Epoch: {} || Loss {:.5f} '.format(phase, epoch, running_loss / train_n_total))
                 train_n_total += 1
+                i+=1
+                if i==10:
+                    break
 
             epoch_loss = running_loss / len(dataloaders[phase].dataset)
             epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
 
+            # Calculate elapsed time
             time_elapsed = time.time() - since
             print(phase, ' training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
             print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
-            # deep copy the model
-            if phase == 'val' and epoch_acc > best_acc:
-                best_acc = epoch_acc
-                best_model_wts = copy.deepcopy(model.state_dict())
+            # For Checkpointing and Confusion Matrix
             if phase == 'val':
                 val_acc_history.append(epoch_acc)
                 val_loss_history.append(epoch_loss)
+                val_pred_classes = np.asarray(val_pred_classes)
+                val_ground_truths = np.asarray(val_ground_truths)
+                val_accuracy, val_f1, val_precision, val_recall = get_acc_f1_precision_recall(
+                    val_pred_classes, val_ground_truths
+                )
+                val_f1_score.append(val_f1)
+                val_confusion_matrix = np.array_str(confusion_matrix(val_ground_truths, val_pred_classes, labels=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]))
+                print('Epoch: {} || Val_Acc: {} || Val_Loss: {}'.format(
+                    epoch, val_accuracy, epoch_loss
+                ))
+                print(f'val: \n{val_confusion_matrix}')
+
+                # Deep Copy Model if best accuracy
+                if epoch_acc > best_acc:
+                    best_acc = epoch_acc
+                    best_model_wts = copy.deepcopy(model.state_dict())
+
+                # set current loss to val loss for write history
+                val_loss = epoch_loss
+
             if phase == 'train':
                 train_acc_history.append(epoch_acc)
                 train_loss_history.append(epoch_loss)
+                train_pred_classes = np.asarray(train_pred_classes)
+                train_ground_truths = np.asarray(train_ground_truths)
+                train_accuracy, train_f1, train_precision, train_recall = get_acc_f1_precision_recall(
+                    train_pred_classes, train_ground_truths
+                )
+                train_f1_score.append(train_f1)
+                train_confusion_matrix = np.array_str(confusion_matrix(train_ground_truths, train_pred_classes, labels=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]))
+                print('Epoch: {} || Train_Acc: {} || Train_Loss: {}'.format(
+                    epoch, train_accuracy, epoch_loss
+                ))
+                print(f'train: \n{train_confusion_matrix}')
+                plot_epoch.append(epoch)
+
+                # set current loss to train loss for write history
+                train_loss = epoch_loss
+
+        # Save Weights
+        model_name = save_weights(model, args, epoch, optimizer)
+
+        # Write History after train and validation phase
+        write_history(
+            args.history_path,
+            model_name,
+            train_loss,
+            val_loss,
+            train_accuracy,
+            val_accuracy,
+            train_f1,
+            val_f1,
+            train_precision,
+            val_precision,
+            train_recall,
+            val_recall,
+            train_confusion_matrix,
+            val_confusion_matrix
+        )
 
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
@@ -100,7 +211,175 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
 
     # load best model weights
     model.load_state_dict(best_model_wts)
-    return model, val_acc_history, train_acc_history, val_loss_history, train_loss_history
+    return model, train_loss_history, val_loss_history, train_acc_history, val_acc_history, train_f1_score, val_f1_score, plot_epoch
+def train_model(model, base_model_name, dataloaders, criterion, optimizer, args, start_epoch=1, num_epochs=25):
+    """
+    Trains the 3D CNN Model
+    :param model: Model object that we will train
+    :param base_model_name: The base name of the model
+    :param dataloaders: A dictionary of train and validation dataloader
+    :param criterion: Pytorch Criterion Instance
+    :param optimizer: Pytorch Optimizer Instance
+    :param num_epochs: Number of epochs during training
+    :return: model, train_loss_history, val_loss_history, train_acc_history, val_acc_history, train_f1_score, val_f1_score, plot_epoch
+    """
+
+    # Initializes Session History in the history file
+    init_session_history(args)
+    since = time.time()
+
+    train_acc_history = []
+    val_acc_history = []
+    train_loss_history = []
+    val_loss_history = []
+    train_f1_score = []
+    val_f1_score = []
+    plot_epoch = []
+
+    best_model_wts = copy.deepcopy(model.state_dict())
+    best_acc = 0.0
+
+    for epoch in range(start_epoch, num_epochs):
+
+        # Each epoch has a training and validation phase
+        for phase in ['train', 'val']:
+            if phase == 'train':
+                model.train()  # Set model to training mode
+                train_pred_classes = []
+                train_ground_truths = []
+            else:
+                model.eval()  # Set model to evaluate mode
+                val_pred_classes = []
+                val_ground_truths = []
+
+            running_loss = 0.0
+            running_corrects = 0
+            train_n_total = 1
+
+            pbar = tqdm(dataloaders[phase])
+            # Iterate over data.
+            i = 0
+            for sample in pbar:
+                inputs = sample["video"]
+                labels = sample["action"]
+                inputs = inputs.to(device)
+                labels = labels.to(device)
+
+                # zero the parameter gradients
+                optimizer.zero_grad()
+
+                # forward
+                # track history if only in train
+                with torch.set_grad_enabled(phase == 'train'):
+
+                    outputs = model(inputs)
+                    loss = criterion(outputs, torch.max(labels, 1)[1])
+
+                    _, preds = torch.max(outputs, 1)
+                    #print(preds)
+                    #print(torch.max(labels, 1)[1])
+
+                    if phase == 'train':
+                        train_pred_classes.extend(preds.detach().cpu().numpy())
+                        train_ground_truths.extend(torch.max(labels, 1)[1].detach().cpu().numpy())
+                    else:
+                        val_pred_classes.extend(preds.detach().cpu().numpy())
+                        val_ground_truths.extend(torch.max(labels, 1)[1].detach().cpu().numpy())
+
+                    # backward + optimize only if in training phase
+                    if phase == 'train':
+                        loss.backward()
+                        optimizer.step()
+
+                # statistics
+                running_loss += loss.item() * inputs.size(0)
+                running_corrects += torch.sum(preds == torch.max(labels, 1)[1])
+
+                pbar.set_description('Phase: {} || Epoch: {} || Loss {:.5f} '.format(phase, epoch, running_loss / train_n_total))
+                train_n_total += 1
+                i+=1
+                if i==10:
+                    break
+
+            epoch_loss = running_loss / len(dataloaders[phase].dataset)
+            epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
+
+            # Calculate elapsed time
+            time_elapsed = time.time() - since
+            print(phase, ' training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
+            print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
+
+            # For Checkpointing and Confusion Matrix
+            if phase == 'val':
+                val_acc_history.append(epoch_acc)
+                val_loss_history.append(epoch_loss)
+                val_pred_classes = np.asarray(val_pred_classes)
+                val_ground_truths = np.asarray(val_ground_truths)
+                val_accuracy, val_f1, val_precision, val_recall = get_acc_f1_precision_recall(
+                    val_pred_classes, val_ground_truths
+                )
+                val_f1_score.append(val_f1)
+                val_confusion_matrix = np.array_str(confusion_matrix(val_ground_truths, val_pred_classes, labels=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]))
+                print('Epoch: {} || Val_Acc: {} || Val_Loss: {}'.format(
+                    epoch, val_accuracy, epoch_loss
+                ))
+                print(f'val: \n{val_confusion_matrix}')
+
+                # Deep Copy Model if best accuracy
+                if epoch_acc > best_acc:
+                    best_acc = epoch_acc
+                    best_model_wts = copy.deepcopy(model.state_dict())
+
+                # set current loss to val loss for write history
+                val_loss = epoch_loss
+
+            if phase == 'train':
+                train_acc_history.append(epoch_acc)
+                train_loss_history.append(epoch_loss)
+                train_pred_classes = np.asarray(train_pred_classes)
+                train_ground_truths = np.asarray(train_ground_truths)
+                train_accuracy, train_f1, train_precision, train_recall = get_acc_f1_precision_recall(
+                    train_pred_classes, train_ground_truths
+                )
+                train_f1_score.append(train_f1)
+                train_confusion_matrix = np.array_str(confusion_matrix(train_ground_truths, train_pred_classes, labels=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]))
+                print('Epoch: {} || Train_Acc: {} || Train_Loss: {}'.format(
+                    epoch, train_accuracy, epoch_loss
+                ))
+                print(f'train: \n{train_confusion_matrix}')
+                plot_epoch.append(epoch)
+
+                # set current loss to train loss for write history
+                train_loss = epoch_loss
+
+        # Save Weights
+        model_name = save_weights(model, args, epoch, optimizer)
+
+        # Write History after train and validation phase
+        write_history(
+            args.history_path,
+            model_name,
+            train_loss,
+            val_loss,
+            train_accuracy,
+            val_accuracy,
+            train_f1,
+            val_f1,
+            train_precision,
+            val_precision,
+            train_recall,
+            val_recall,
+            train_confusion_matrix,
+            val_confusion_matrix
+        )
+
+    time_elapsed = time.time() - since
+    print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
+    print('Best val Acc: {:4f}'.format(best_acc))
+
+    # load best model weights
+    model.load_state_dict(best_model_wts)
+    return model, train_loss_history, val_loss_history, train_acc_history, val_acc_history, train_f1_score, val_f1_score, plot_epoch
 
 def check_accuracy(loader, model):
     num_correct = 0
@@ -117,9 +396,6 @@ def check_accuracy(loader, model):
             print(scores)
             predictions = scores.argmax (1)
             y = y.argmax (1)
-
-            print(y)
-            print(predictions)
 
             num_correct += (predictions == y).sum()
             num_samples += predictions.size(0)
@@ -140,37 +416,24 @@ if __name__ == "__main__":
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # 10 - Number of classes of basketball actions
-    num_classes = 10
-    # Batch size for training (change depending on how much memory you have)
-    batch_size = 12
-    # Number of epochs to train for
-    num_epochs = 20
-    # Unfreeze Layers
-    layers = ['layer3', 'layer4', 'fc']
-
     # Initialize R(2+1)D Model
-    model = models.video.r2plus1d_18(pretrained=False, progress=True)
+    model = models.video.r2plus1d_18(pretrained=args.pretrained, progress=True)
 
     # change final fully-connected layer to output 10 classes
     for param in model.parameters():
         param.requires_grad = False
 
     for name, param in model.named_parameters():
-        for layer in layers:
+        for layer in args.layers_list:
             if layer in name:
                 param.requires_grad = True
 
     # input of the next hidden layer
     num_ftrs = model.fc.in_features
-    print(num_ftrs)
     # New Model is trained with 128x176 images
     # Calculation:
-    model.fc = nn.Linear(num_ftrs, num_classes, bias=True)
+    model.fc = nn.Linear(num_ftrs, args.num_classes, bias=True)
     print(model)
-
-    # Put model into device after updating parameters
-    model = model.to(device)
 
     params_to_update = model.parameters()
     print("Params to learn:")
@@ -195,8 +458,8 @@ if __name__ == "__main__":
     ], random_order=True)
 
     #Load Dataset
-    basketball_dataset = BasketballDataset(annotation_dict="dataset/annotation_dict.json",
-                                           augmented_dict="dataset/augmented_annotation_dict.json")
+    basketball_dataset = BasketballDataset(annotation_dict=args.annotation_path,
+                                           augmented_dict=args.augmented_annotation_path)
 
     train_subset, test_subset = random_split(
     basketball_dataset, [44911, 4990], generator=torch.Generator().manual_seed(1))
@@ -204,42 +467,52 @@ if __name__ == "__main__":
     train_subset, val_subset = random_split(
         train_subset, [34931, 9980], generator=torch.Generator().manual_seed(1))
 
-    train_loader = DataLoader(dataset=train_subset, shuffle=True, batch_size=batch_size)
-    val_loader = DataLoader(dataset=val_subset, shuffle=False, batch_size=batch_size)
-    test_loader = DataLoader(dataset=test_subset, shuffle=False, batch_size=batch_size)
+    train_loader = DataLoader(dataset=train_subset, shuffle=True, batch_size=args.batch_size)
+    val_loader = DataLoader(dataset=val_subset, shuffle=False, batch_size=args.batch_size)
+    test_loader = DataLoader(dataset=test_subset, shuffle=False, batch_size=args.batch_size)
 
     dataloaders_dict = {'train': train_loader, 'val': val_loader}
 
     # Train
-    optimizer_ft = optim.Adam(params_to_update, lr=0.01)
+    optimizer_ft = optim.Adam(params_to_update, lr=args.lr)
 
     criterion = nn.CrossEntropyLoss()
 
+    if args.continue_epoch:
+        model = load_weights(model, args)
+
+    if torch.cuda.is_available():
+        # Put model into device after updating parameters
+        model = model.to(device)
+        criterion = criterion.to(device)
+
     # Train and evaluate
-    model, val_acc_history, train_acc_history, val_loss_history, train_loss_history = train_model(model,
-                                                                                                  dataloaders_dict,
-                                                                                                  criterion,
-                                                                                                  optimizer_ft,
-                                                                                                  num_epochs=num_epochs)
+    model, train_loss_history, val_loss_history, train_acc_history, val_acc_history, train_f1_score, val_f1_score, plot_epoch = train_model(model,
+                                                                                                                                            args.base_model_name,
+                                                                                                                                            dataloaders_dict,
+                                                                                                                                            criterion,
+                                                                                                                                            optimizer_ft,
+                                                                                                                                            args,
+                                                                                                                                            start_epoch=args.start_epoch,
+                                                                                                                                            num_epochs=args.num_epochs)
 
     print("Best Validation Loss: ", min(val_loss_history), "Epoch: ", val_loss_history.index(min(val_loss_history)))
     print("Best Training Loss: ", min(train_loss_history), "Epoch: ", train_loss_history.index(min(train_loss_history)))
 
-    # Plot Accuracy
-    plt.plot(train_acc_history)
-    plt.plot(val_acc_history)
+    # Plot Final Curve
+    plot_curves(
+        args.base_model_name,
+        train_loss_history,
+        val_loss_history,
+        train_acc_history,
+        val_acc_history,
+        train_f1_score,
+        val_f1_score,
+        plot_epoch
+    )
 
-    # Plot Loss
-    plt.plot(train_loss_history)
-    plt.plot(val_loss_history)
-
-    # Save Model
-    PATH = "model/small_dataset/"
-    torch.save(model.state_dict(), PATH + "c3d-basketball-overfit.pth")
-
-    # Save Model
-    PATH = "model/"
-    torch.save(model.state_dict(), PATH + "c3d-basketball.pth")
+    # Read History
+    read_history(args.history_path)
 
     # Check Accuracy with Test Set
     check_accuracy(test_loader, model)

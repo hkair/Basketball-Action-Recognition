@@ -102,7 +102,7 @@ def plot_curves(base_model_name, train_loss, val_loss, train_acc, val_acc, train
 
     plt.suptitle(f'Session: {base_model_name}')
 
-    plt.savefig('previous_run.png')
+    #plt.savefig('previous_run.png')
     plt.show()
 
 def write_history(

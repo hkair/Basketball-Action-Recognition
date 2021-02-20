@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader, random_split
 import time
 import matplotlib.pyplot as plt
 
-from utils import BasketballDataset, BasketballDatasetTensor, BasketballDatasetNumpy
+from dataset import BasketballDataset
 
 import copy
 from tqdm import tqdm
@@ -148,8 +148,7 @@ if __name__ == "__main__":
     # Unfreeze Layers
     layers = ['layer3', 'layer4', 'fc']
 
-    # Initialize C3D Model
-    # Initialize C3D Model
+    # Initialize R(2+1)D Model
     model = models.video.r2plus1d_18(pretrained=False, progress=True)
 
     # change final fully-connected layer to output 10 classes

@@ -40,11 +40,11 @@ args = EasyDict({
     # Path params
     'annotation_path': "dataset/annotation_dict.json",
     'augmented_annotation_path': "dataset/augmented_annotation_dict.json",
-    'model_path': "model/r2plus1d_augmented/",
+    'model_path': "model_checkpoints/r2plus1d_augmented/",
     'history_path': "histories/history_r2plus1d_augmented.txt"
 })
 
-def train_model(model, base_model_name, dataloaders, criterion, optimizer, args, start_epoch=1, num_epochs=25):
+def train_model(model, dataloaders, criterion, optimizer, args, start_epoch=1, num_epochs=25):
     """
     Trains the 3D CNN Model
     :param model: Model object that we will train
@@ -90,7 +90,6 @@ def train_model(model, base_model_name, dataloaders, criterion, optimizer, args,
 
             pbar = tqdm(dataloaders[phase])
             # Iterate over data.
-            i = 0
             for sample in pbar:
                 inputs = sample["video"]
                 labels = sample["action"]
@@ -129,177 +128,6 @@ def train_model(model, base_model_name, dataloaders, criterion, optimizer, args,
 
                 pbar.set_description('Phase: {} || Epoch: {} || Loss {:.5f} '.format(phase, epoch, running_loss / train_n_total))
                 train_n_total += 1
-                i+=1
-                if i==10:
-                    break
-
-            epoch_loss = running_loss / len(dataloaders[phase].dataset)
-            epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
-
-            # Calculate elapsed time
-            time_elapsed = time.time() - since
-            print(phase, ' training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
-            print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
-
-            # For Checkpointing and Confusion Matrix
-            if phase == 'val':
-                val_acc_history.append(epoch_acc)
-                val_loss_history.append(epoch_loss)
-                val_pred_classes = np.asarray(val_pred_classes)
-                val_ground_truths = np.asarray(val_ground_truths)
-                val_accuracy, val_f1, val_precision, val_recall = get_acc_f1_precision_recall(
-                    val_pred_classes, val_ground_truths
-                )
-                val_f1_score.append(val_f1)
-                val_confusion_matrix = np.array_str(confusion_matrix(val_ground_truths, val_pred_classes, labels=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]))
-                print('Epoch: {} || Val_Acc: {} || Val_Loss: {}'.format(
-                    epoch, val_accuracy, epoch_loss
-                ))
-                print(f'val: \n{val_confusion_matrix}')
-
-                # Deep Copy Model if best accuracy
-                if epoch_acc > best_acc:
-                    best_acc = epoch_acc
-                    best_model_wts = copy.deepcopy(model.state_dict())
-
-                # set current loss to val loss for write history
-                val_loss = epoch_loss
-
-            if phase == 'train':
-                train_acc_history.append(epoch_acc)
-                train_loss_history.append(epoch_loss)
-                train_pred_classes = np.asarray(train_pred_classes)
-                train_ground_truths = np.asarray(train_ground_truths)
-                train_accuracy, train_f1, train_precision, train_recall = get_acc_f1_precision_recall(
-                    train_pred_classes, train_ground_truths
-                )
-                train_f1_score.append(train_f1)
-                train_confusion_matrix = np.array_str(confusion_matrix(train_ground_truths, train_pred_classes, labels=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]))
-                print('Epoch: {} || Train_Acc: {} || Train_Loss: {}'.format(
-                    epoch, train_accuracy, epoch_loss
-                ))
-                print(f'train: \n{train_confusion_matrix}')
-                plot_epoch.append(epoch)
-
-                # set current loss to train loss for write history
-                train_loss = epoch_loss
-
-        # Save Weights
-        model_name = save_weights(model, args, epoch, optimizer)
-
-        # Write History after train and validation phase
-        write_history(
-            args.history_path,
-            model_name,
-            train_loss,
-            val_loss,
-            train_accuracy,
-            val_accuracy,
-            train_f1,
-            val_f1,
-            train_precision,
-            val_precision,
-            train_recall,
-            val_recall,
-            train_confusion_matrix,
-            val_confusion_matrix
-        )
-
-    time_elapsed = time.time() - since
-    print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
-    print('Best val Acc: {:4f}'.format(best_acc))
-
-    # load best model weights
-    model.load_state_dict(best_model_wts)
-    return model, train_loss_history, val_loss_history, train_acc_history, val_acc_history, train_f1_score, val_f1_score, plot_epoch
-def train_model(model, base_model_name, dataloaders, criterion, optimizer, args, start_epoch=1, num_epochs=25):
-    """
-    Trains the 3D CNN Model
-    :param model: Model object that we will train
-    :param base_model_name: The base name of the model
-    :param dataloaders: A dictionary of train and validation dataloader
-    :param criterion: Pytorch Criterion Instance
-    :param optimizer: Pytorch Optimizer Instance
-    :param num_epochs: Number of epochs during training
-    :return: model, train_loss_history, val_loss_history, train_acc_history, val_acc_history, train_f1_score, val_f1_score, plot_epoch
-    """
-
-    # Initializes Session History in the history file
-    init_session_history(args)
-    since = time.time()
-
-    train_acc_history = []
-    val_acc_history = []
-    train_loss_history = []
-    val_loss_history = []
-    train_f1_score = []
-    val_f1_score = []
-    plot_epoch = []
-
-    best_model_wts = copy.deepcopy(model.state_dict())
-    best_acc = 0.0
-
-    for epoch in range(start_epoch, num_epochs):
-
-        # Each epoch has a training and validation phase
-        for phase in ['train', 'val']:
-            if phase == 'train':
-                model.train()  # Set model to training mode
-                train_pred_classes = []
-                train_ground_truths = []
-            else:
-                model.eval()  # Set model to evaluate mode
-                val_pred_classes = []
-                val_ground_truths = []
-
-            running_loss = 0.0
-            running_corrects = 0
-            train_n_total = 1
-
-            pbar = tqdm(dataloaders[phase])
-            # Iterate over data.
-            i = 0
-            for sample in pbar:
-                inputs = sample["video"]
-                labels = sample["action"]
-                inputs = inputs.to(device)
-                labels = labels.to(device)
-
-                # zero the parameter gradients
-                optimizer.zero_grad()
-
-                # forward
-                # track history if only in train
-                with torch.set_grad_enabled(phase == 'train'):
-
-                    outputs = model(inputs)
-                    loss = criterion(outputs, torch.max(labels, 1)[1])
-
-                    _, preds = torch.max(outputs, 1)
-                    #print(preds)
-                    #print(torch.max(labels, 1)[1])
-
-                    if phase == 'train':
-                        train_pred_classes.extend(preds.detach().cpu().numpy())
-                        train_ground_truths.extend(torch.max(labels, 1)[1].detach().cpu().numpy())
-                    else:
-                        val_pred_classes.extend(preds.detach().cpu().numpy())
-                        val_ground_truths.extend(torch.max(labels, 1)[1].detach().cpu().numpy())
-
-                    # backward + optimize only if in training phase
-                    if phase == 'train':
-                        loss.backward()
-                        optimizer.step()
-
-                # statistics
-                running_loss += loss.item() * inputs.size(0)
-                running_corrects += torch.sum(preds == torch.max(labels, 1)[1])
-
-                pbar.set_description('Phase: {} || Epoch: {} || Loss {:.5f} '.format(phase, epoch, running_loss / train_n_total))
-                train_n_total += 1
-                i+=1
-                if i==10:
-                    break
 
             epoch_loss = running_loss / len(dataloaders[phase].dataset)
             epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
@@ -488,7 +316,6 @@ if __name__ == "__main__":
 
     # Train and evaluate
     model, train_loss_history, val_loss_history, train_acc_history, val_acc_history, train_f1_score, val_f1_score, plot_epoch = train_model(model,
-                                                                                                                                            args.base_model_name,
                                                                                                                                             dataloaders_dict,
                                                                                                                                             criterion,
                                                                                                                                             optimizer_ft,

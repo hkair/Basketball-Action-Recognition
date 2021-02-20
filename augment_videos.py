@@ -12,7 +12,7 @@ def augmentVideo(annotation_dict, labels_dict, data_dir='dataset/examples/', out
     :param labels_dict: Dictionary matching the encoding to a Basketball Action
     :param data_dir: Path to Basketball Action Video Data
     :param output_dir: Output path of augmented videos
-    :return: Videos that have been augmented with translation and rotation
+    :return:
     """
 
     with open(annotation_dict) as f:
@@ -31,14 +31,15 @@ def augmentVideo(annotation_dict, labels_dict, data_dir='dataset/examples/', out
             count_dict[labels_dict[annotation_dict[key]]] = 1
 
     sorted_dict = {k: v for k, v in sorted(count_dict.items(), key=lambda item: item[1])}
+    # Augments videos that have less than 2000 examples
     filtered_actions = [k for k, v in sorted_dict.items() if v <= 2000]
 
     # Transforms
-    sometimes = lambda aug: vidaug.Sometimes(0.5, aug)  # Used to apply augmentor with 50% probability
-    video_augmentation = vidaug.Sequential([
-        sometimes(vidaug.Salt()),
-        sometimes(vidaug.Pepper()),
-    ], random_order=True)
+    # sometimes = lambda aug: vidaug.Sometimes(0.5, aug)  # Used to apply augmentor with 50% probability
+    # video_augmentation = vidaug.Sequential([
+    #     sometimes(vidaug.Salt()),
+    #     sometimes(vidaug.Pepper()),
+    # ], random_order=True)
 
     augmented_annotation = dict()
     pbar = tqdm(video_list)

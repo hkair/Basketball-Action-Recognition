@@ -27,7 +27,7 @@ args = EasyDict({
 
     # training/model params
     'pretrained': True,
-    'lr': 0.01,
+    'lr': 0.0001,
     'start_epoch': 1,
     'num_epochs': 25,
     'layers_list': ['layer3', 'layer4', 'fc'],
@@ -36,12 +36,15 @@ args = EasyDict({
     # Dataset params
     'num_classes': 10,
     'batch_size': 8,
+    'n_total': 49901,
+    'test_n': 4990,
+    'val_n': 9980,
 
     # Path params
     'annotation_path': "dataset/annotation_dict.json",
     'augmented_annotation_path': "dataset/augmented_annotation_dict.json",
-    'model_path': "model_checkpoints/r2plus1d_augmented/",
-    'history_path': "histories/history_r2plus1d_augmented.txt"
+    'model_path': "model_checkpoints/r2plus1d_augmented-2/",
+    'history_path': "histories/history_r2plus1d_augmented-2.txt"
 })
 
 def train_model(model, dataloaders, criterion, optimizer, args, start_epoch=1, num_epochs=25):

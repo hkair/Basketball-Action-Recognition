@@ -24,9 +24,9 @@ from utils.metrics import get_acc_f1_precision_recall
 args = EasyDict({
 
     'base_model_name': 'r2plus1d_multiclass',
+    'pretrained': True,
 
     # training/model params
-    'pretrained': True,
     'lr': 0.0001,
     'start_epoch': 1,
     'num_epochs': 25,
@@ -218,8 +218,10 @@ def check_accuracy(loader, model):
     model.eval()
 
     with torch.no_grad():
-        i = 12
-        for sample in loader:
+        i = args.batch_size
+
+        pbar = tqdm(loader)
+        for sample in pbar:
             x = sample["video"].to(device=device)
             y = sample["action"].to(device=device)
 
@@ -230,8 +232,9 @@ def check_accuracy(loader, model):
 
             num_correct += (predictions == y).sum()
             num_samples += predictions.size(0)
-            print(i/5000)
-            i += 12
+
+            pbar.set_description('Progress: {}'.format(i/args.test_n))
+            i += args.batch_size
 
         print(f'Got {num_correct} / {num_samples} with accuracy {float(num_correct)/float(num_samples)*100:.2f}')
 
@@ -293,10 +296,10 @@ if __name__ == "__main__":
                                            augmented_dict=args.augmented_annotation_path)
 
     train_subset, test_subset = random_split(
-    basketball_dataset, [44911, 4990], generator=torch.Generator().manual_seed(1))
+    basketball_dataset, [args.n_total-args.test_n, args.test_n], generator=torch.Generator().manual_seed(1))
 
     train_subset, val_subset = random_split(
-        train_subset, [34931, 9980], generator=torch.Generator().manual_seed(1))
+        train_subset, [args.n_total-args.test_n-args.val_n, args.val_n], generator=torch.Generator().manual_seed(1))
 
     train_loader = DataLoader(dataset=train_subset, shuffle=True, batch_size=args.batch_size)
     val_loader = DataLoader(dataset=val_subset, shuffle=False, batch_size=args.batch_size)

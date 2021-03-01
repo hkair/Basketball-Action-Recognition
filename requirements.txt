@@ -1,3 +1,4 @@
+appdirs==1.4.4
 argon2-cffi==20.1.0
 async-generator==1.10
 attrs==20.3.0
@@ -8,11 +9,14 @@ colorama==0.4.4
 cycler==0.10.0
 decorator==4.4.2
 defusedxml==0.6.0
+distlib==0.3.1
 easydict==1.9
 entrypoints==0.3
 ffmpeg-python==0.2.0
+filelock==3.0.12
 future==0.18.2
 imageio==2.9.0
+imutils==0.5.4
 ipykernel==5.4.3
 ipython==7.19.0
 ipython-genutils==0.2.0
@@ -37,8 +41,8 @@ nbformat==5.1.2
 nest-asyncio==1.4.3
 networkx==2.5
 notebook==6.2.0
-numpy==1.19.3
-opencv-python==4.5.1.48
+numpy==1.20.1
+opencv-contrib-python==4.5.1.48
 packaging==20.8
 pandas==1.2.0
 pandocfilters==1.4.3
@@ -79,6 +83,7 @@ tqdm==4.56.0
 traitlets==5.0.5
 typing-extensions==3.7.4.3
 vidaug==0.1
+virtualenv==20.4.0
 wcwidth==0.2.5
 webencodings==0.5.1
 widgetsnbextension==3.5.1

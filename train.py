@@ -4,7 +4,6 @@ from __future__ import division
 import numpy as np
 import copy
 import time
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 from easydict import EasyDict
 from vidaug import augmentors as vidaug

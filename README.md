@@ -38,10 +38,7 @@ The final model was a R(2+1)D CNN trained on the additional augmented examples. 
 #### Inference Examples
 
 ##### Shooting
-###### True
-![true_shoot](examples/true_shoot.gif)
-###### False
-![false_shoot](examples/false_shoot.gif)
+###### True ![true_shoot](examples/true_shoot.gif) ###### False ![false_shoot](examples/false_shoot.gif)
 
 ##### Dribble
 ###### True

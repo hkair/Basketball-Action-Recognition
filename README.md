@@ -1,6 +1,8 @@
 # Basketball-Action-Recognition
 Spatio-Temporal Classification of 🏀  Basketball Actions using 3D-CNN Models on the SpaceJam Dataset.
 
+![Lebron Shoots](examples/lebron_shoots.gif)
+
 ## Motivation
 Utilizing the SpaceJam Basketball Action Dataset [Repo](https://github.com/simonefrancia/SpaceJam), I aim to create a system that takes a video of a basketball game to classify a given action for each of the players tracked with a bounding box. There are two essential parts for this program: R(2+1)D Model (Can be any 3D CNN architecture) and the player tracker.  
 
@@ -17,7 +19,7 @@ As mentioned above, the SpaceJam Basketball Action Dataset was used to train the
 ![alt text](https://raw.githubusercontent.com/simonefrancia/SpaceJam/master/.github/histogram.png)
 
 ### Augmentations
-After reading the thesis [Classificazione di Azioni Cestistiche mediante Tecniche di Deep Learning](https://www.researchgate.net/publication/330534530_Classificazione_di_Azioni_Cestistiche_mediante_Tecniche_di_Deep_Learning), (Written by Simone Francia) it was determined that the poorest classes with examples less than 2000 were augmented. Dribble, Ball in Hand, Pass, Block, Pick and Shoot were among the classes that was augmented. Augmentations are applied by running the script [augment_videos.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/augment_videos.py) and saved in a given output directory.  Translation and Rotation were the only augmentations applied to the classes.
+After reading the thesis [Classificazione di Azioni Cestistiche mediante Tecniche di Deep Learning](https://www.researchgate.net/publication/330534530_Classificazione_di_Azioni_Cestistiche_mediante_Tecniche_di_Deep_Learning), (Written by Simone Francia) it was determined that the poorest classes with examples less than 2000 were augmented. Dribble, Ball in Hand, Pass, Block, Pick and Shoot were among the classes that was augmented. Augmentations are applied by running the script [augment_videos.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/augment_videos.py) and saved in a given output directory.  Translation and Rotation were the only augmentations applied to the mentioned classes.
 
 #### Rotate
 ![rotate](examples/0000000_flipped_rotate_330.gif)

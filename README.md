@@ -10,7 +10,7 @@ This is a demo video from the SpaceJam Repo.
 
 [Demo Video](https://www.youtube.com/watch?v=PEziTgHx4cA)
 
-## 3D-CNN Video Classification
+## Action/Video Classification
 A pretrained baseline R(2+1)D CNN (pretrained on kinetics-400 dataset) from [torchvision.models](https://pytorch.org/vision/0.8/models.html) is used and further fine-tuned on the SpaceJam dataset. Any 3D CNN architecture can be used, but for this project it was decided that the R(2+1)D was a perfect balance in terms of number of parameters and overall model performance. It was also shown in the [paper](https://arxiv.org/pdf/1711.11248.pdf) that factorizing 3D convolutional filters into separate spatial and temporal dimensions, alongside residuual learninng yields significant gains in accuracy. The training was done at [train.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/train.py).
 
 ### Dataset
@@ -31,13 +31,17 @@ After reading the thesis [Classificazione di Azioni Cestistiche mediante Tecnich
 ### Validation and Evaluation
 The final model was a R(2+1)D CNN trained on the additional augmented examples. For validation on the test set, the model at epoch 19 was used as it was the best performing model in terms of validation f1-score and accuracy.
 
+#### Confusion Matrix 
 ![confusion matrix](examples/confusion_matrix.png)
 
 ## Player Tracking 
 
 
-
 ## Future Additions
+- Separate augmented examples from validation and only in training.
+- Utilize better player tracking methods. 
+- Restrict Box size to 176x128 (Or with similar Aspect Ratio), so resize of image is not applied.
+- Fully automate player tracking. Potentially using YOLO or any other Object Detection Models.
 
 ## Credits
 Major thanks to [Simone Francia](https://github.com/simonefrancia) for the basketball action dataset and paper on action classification with 3D-CNNS. 

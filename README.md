@@ -39,7 +39,7 @@ The final model was a R(2+1)D CNN trained on the additional augmented examples. 
 
 |   State   |   Shooting   |   Dribble   |   Pass   |   Defence   |   Pick   |   Run   |   Walk   |   Block   |   No Action   |
 :----------:|:------------:|:-----------:|:--------:|:-----------:|:--------:|:-------:|:--------:|:---------:|:--------------:
-True | ![true_shoot](examples/true_shoot.gif) | ![true_dribbble](examples/true_dribble.gif) | ![true_pass](examples/true_pass.gif) | ![true_defence](examples/true_defence.gif) | ![true_pick](examples/true_pick.gif) | ![true_run](examples/true_runn.gif) | ![true_walk](examples/true_walk.gif) | ![true_block](examples/true_block.gif) | ![true_no_action](examples/true_no_action.gif)
+True | ![true_shoot](examples/true_shoot.gif) | ![true_dribbble](examples/true_dribble.gif) | ![true_pass](examples/true_pass.gif) | ![true_defence](examples/true_defence.gif) | ![true_pick](examples/true_pick.gif) | ![true_run](examples/true_run.gif) | ![true_walk](examples/true_walk.gif) | ![true_block](examples/true_block.gif) | ![true_no_action](examples/true_no_action.gif)
 False | ![false_shoot](examples/false_shoot.gif) | ![false_dribbble](examples/false_dribble.gif) | ![false_pass](examples/false_pass.gif) | ![false_defence](examples/false_defence.gif) | ![false_pick](examples/false_pick.gif) | ![false_run](examples/false_run.gif) | ![false_walk](examples/false_walk.gif) | ![false_block](examples/false_block.gif) | ![false_no_action](examples/false_no_action.gif)
 
 ## Player Tracking 

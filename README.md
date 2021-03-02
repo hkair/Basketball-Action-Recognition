@@ -37,6 +37,14 @@ The final model was a R(2+1)D CNN trained on the additional augmented examples. 
 
 #### Inference Examples
 
+##### Shooting
+![true_shoot](examples/true_shoot.gif)
+![false_shoot](examples/false_shoot.gif)
+
+##### Dribble
+![true_dribbble](examples/true_dribble.gif)
+![false_dribbble](examples/false_dribble.gif)
+
 ## Player Tracking 
 All player tracking is done in [main.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/main.py). Players are tracked by manually selecting the ROI. In theory, an unlimited amount of people or players can be tracked, but this will significantly increase the compute time. In the example above only 2 players, LeBron James (Offence) & Deandre Jordan (Defence) were tracked.
 

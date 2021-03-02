@@ -1,4 +1,4 @@
-## Basketball-Action-Recognition
+# Basketball-Action-Recognition
 Spatio-Temporal Classification of 🏀  Basketball Actions using 3D-CNN Models on the SpaceJam Dataset.
 
 ## Motivation
@@ -18,6 +18,10 @@ As mentioned above, the SpaceJam Basketball Action Dataset was used to train the
 
 ### Augmentations
 After reading the thesis [Classificazione di Azioni Cestistiche mediante Tecniche di Deep Learning](https://www.researchgate.net/publication/330534530_Classificazione_di_Azioni_Cestistiche_mediante_Tecniche_di_Deep_Learning), (Written by Simone Francia) it was determined that the poorest classes with examples less than 2000 were augmented. Dribble, Ball in Hand, Pass, Block, Pick and Shoot were among the classes that was augmented. Augmentations are applied by running the script [augment_videos.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/augment_videos.py) and saved in a given output directory.  Translation and Rotation were the only augmentations applied to the classes.
+
+![rotate]("examples/0000000_flipped_rotate_330.mp4")
+
+![translate]("examples/0000000_translate_32_0.mp4")
 
 ## Player Tracking 
 

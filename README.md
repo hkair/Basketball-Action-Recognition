@@ -37,10 +37,10 @@ The final model was a R(2+1)D CNN trained on the additional augmented examples. 
 
 #### Inference Examples
 
-|   State   |   Shooting   |   Dribble   |   Pass   |   Defence   |
-:----------:|:------------:|:-----------:|:--------:|:------------:
-True | ![true_shoot](examples/true_shoot.gif) | ![true_dribbble](examples/true_dribble.gif) | ![true_pass](examples/true_pass.gif) | ![true_defence](examples/true_defence.gif)
-False | ![false_shoot](examples/false_shoot.gif) | ![false_dribbble](examples/false_dribble.gif) | ![false_pass](examples/false_pass.gif) | ![false_defence](examples/false_defence.gif)
+|   State   |   Shooting   |   Dribble   |   Pass   |   Defence   |   Pick   |  
+:----------:|:------------:|:-----------:|:--------:|:-----------:|:---------:
+True | ![true_shoot](examples/true_shoot.gif) | ![true_dribbble](examples/true_dribble.gif) | ![true_pass](examples/true_pass.gif) | ![true_defence](examples/true_defence.gif) | ![true_pick](examples/true_pick.gif)
+False | ![false_shoot](examples/false_shoot.gif) | ![false_dribbble](examples/false_dribble.gif) | ![false_pass](examples/false_pass.gif) | ![false_defence](examples/false_defence.gif) | ![false_pick](examples/false_pick.gif)
 
 ## Player Tracking 
 All player tracking is done in [main.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/main.py). Players are tracked by manually selecting the ROI. In theory, an unlimited amount of people or players can be tracked, but this will significantly increase the compute time. In the example above only 2 players, LeBron James (Offence) & Deandre Jordan (Defence) were tracked.

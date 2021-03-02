@@ -45,6 +45,14 @@ The final model was a R(2+1)D CNN trained on the additional augmented examples. 
 ![true_dribbble](examples/true_dribble.gif)
 ![false_dribbble](examples/false_dribble.gif)
 
+##### Pass
+![true_pass](examples/true_pass.gif)
+![false_pass](examples/false_pass.gif)
+
+##### Dribble
+![true_defence](examples/true_defence.gif)
+![false_defence](examples/false_defence.gif)
+
 ## Player Tracking 
 All player tracking is done in [main.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/main.py). Players are tracked by manually selecting the ROI. In theory, an unlimited amount of people or players can be tracked, but this will significantly increase the compute time. In the example above only 2 players, LeBron James (Offence) & Deandre Jordan (Defence) were tracked.
 
@@ -55,4 +63,4 @@ All player tracking is done in [main.py](https://github.com/hkair/Basketball-Act
 - Fully automate player tracking. Potentially using YOLO or any other Object Detection Models.
 
 ## Credits
-Major thanks to [Simone Francia](https://github.com/simonefrancia) for the basketball action dataset and paper on action classification with 3D-CNNS. 
+Major thanks to [Simone Francia](https://github.com/simonefrancia) for the basketball action dataset and paper on action classification with 3D-CNNs. 

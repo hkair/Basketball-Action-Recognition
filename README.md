@@ -38,19 +38,27 @@ The final model was a R(2+1)D CNN trained on the additional augmented examples. 
 #### Inference Examples
 
 ##### Shooting
+###### True
 ![true_shoot](examples/true_shoot.gif)
+###### False
 ![false_shoot](examples/false_shoot.gif)
 
 ##### Dribble
+###### True
 ![true_dribbble](examples/true_dribble.gif)
+###### False
 ![false_dribbble](examples/false_dribble.gif)
 
 ##### Pass
+###### True
 ![true_pass](examples/true_pass.gif)
+###### False
 ![false_pass](examples/false_pass.gif)
 
 ##### Dribble
+###### True
 ![true_defence](examples/true_defence.gif)
+###### False
 ![false_defence](examples/false_defence.gif)
 
 ## Player Tracking 

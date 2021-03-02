@@ -38,7 +38,7 @@ The final model was a R(2+1)D CNN trained on the additional augmented examples. 
 #### Inference Examples
 
 |   Shooting   |   Dribble   |   Pass   |   Defence   |
-:-------------:|:-----------:|:--------:|:-----------:|:
+:-------------:|:-----------:|:--------:|:------------:
 ![true_shoot](examples/true_shoot.gif) | ![true_dribbble](examples/true_dribble.gif) | ![true_pass](examples/true_pass.gif) | ![true_defence](examples/true_defence.gif)
 
 ##### Shooting

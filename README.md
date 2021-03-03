@@ -1,7 +1,7 @@
 # Basketball-Action-Recognition
 Spatio-Temporal Classification of 🏀 Basketball Actions using 3D-CNN Models trained on the SpaceJam Dataset.
 
-LeBron shooting over Deandre Jordan
+**LeBron shooting over Deandre Jordan**
 ![Lebron Shoots](examples/lebron_shoots.gif)
 
 ## Motivation
@@ -38,7 +38,7 @@ The final model was a R(2+1)D CNN trained on the additional augmented examples. 
 
 #### Confusion Matrix 
 
-- 0: Block, 1: Pass, 2: Run, 3: Dribble, 4: Shoot, 5: Ball in Hannd, 6: Defence, 7: Pick, 8: No Action, 9: Walk
+**- 0: Block, 1: Pass, 2: Run, 3: Dribble, 4: Shoot, 5: Ball in Hannd, 6: Defence, 7: Pick, 8: No Action, 9: Walk**
 
 ##### Test on Training and Validation Set
 ![training and validation](examples/epoch_19_checkpoint.png)

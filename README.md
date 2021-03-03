@@ -41,7 +41,7 @@ The final model was a R(2+1)D CNN trained on the additional augmented examples. 
 0: Block, 1: Pass, 2: Run, 3: Dribble, 4: Shoot, 5: Ball in Hannd, 6: Defence, 7: Pick, 8: No Action, 9: Walk
 
 ##### Test on Training and Validation Set
-![training and validation](epoch_19_checkpoint.png)
+![training and validation](examples/epoch_19_checkpoint.png)
 
 ##### Testing on the 10% of the leftover data.
 ![confusion matrix](examples/confusion_matrix.png)

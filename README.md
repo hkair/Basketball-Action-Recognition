@@ -1,5 +1,5 @@
 # Basketball-Action-Recognition
-Spatio-Temporal Classification of 🏀  Basketball Actions using 3D-CNN Models trained on the SpaceJam Dataset.
+Spatio-Temporal Classification of 🏀 Basketball Actions using 3D-CNN Models trained on the SpaceJam Dataset.
 
 LeBron shooting over Deandre Jordan
 ![Lebron Shoots](examples/lebron_shoots.gif)
@@ -54,14 +54,18 @@ True | ![true_shoot](examples/true_shoot.gif) | ![true_dribbble](examples/true_d
 False | ![false_shoot](examples/false_shoot.gif) | ![false_dribbble](examples/false_dribble.gif) | ![false_pass](examples/false_pass.gif) | ![false_defence](examples/false_defence.gif) | ![false_pick](examples/false_pick.gif) | ![false_run](examples/false_run.gif) | ![false_walk](examples/false_walk.gif) | ![false_block](examples/false_block.gif) | ![false_no_action](examples/false_no_action.gif)
 
 ## Player Tracking 
-All player tracking is done in [main.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/main.py). Players are tracked by manually selecting the ROI. In theory, an unlimited amount of people or players can be tracked, but this will significantly increase the compute time. In the example above only 2 players, LeBron James (Offence) & Deandre Jordan (Defence) were tracked.
+All player tracking is done in [main.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/main.py). Players are tracked by manually selecting the ROI using the opencv TrackerCSRT_create() tracker. In theory, an unlimited amount of people or players can be tracked, but this will significantly increase the compute time. In the example above only 2 players, LeBron James (Offence) & Deandre Jordan (Defence) were tracked.
+
+## Output
+After extracting the bounding boxes from TrackerCSRT_create(), a cropped clip of 16 frames is used to classify the actions. The 16 frame length clip is determined by the vid_stride (Set to 8 in the example video above) which is set in the cropWindows() function in ![main.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/main.py). 
 
 ## Future Additions
 - Separate augmented examples from validation and only in training.
 - Utilize better player tracking methods. 
 - Restrict Box size to 176x128 (Or with similar Aspect Ratio), so resize of image is not applied.
 - Fully automate player tracking. Potentially using YOLO or any other Object Detection Models.
-- Play around with hyperparameters such as learnign rates, batch size, layers frozen, etc.
+- Play around with hyperparameters such as learning rates, batch size, layers frozen, etc.
+- Try various 3D-CNN Architectures or sequential models such as CONV-LSTMs.
 
 ## Credits
 Major thanks to [Simone Francia](https://github.com/simonefrancia) for the basketball action dataset and paper on action classification with 3D-CNNs. 

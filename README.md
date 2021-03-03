@@ -4,6 +4,9 @@ Spatio-Temporal Classification of 🏀 Basketball Actions using 3D-CNN Models tr
 **LeBron shooting over Deandre Jordan**
 ![Lebron Shoots](examples/lebron_shoots.gif)
 
+**Live Example**
+![](examples/live_basketball.gif)
+
 ## Motivation
 Utilizing the SpaceJam Basketball Action Dataset [Repo](https://github.com/simonefrancia/SpaceJam), I aim to create a model that takes a video of a basketball game to classify a given action for each of the players tracked with a bounding box. There are two essential parts for this program: R(2+1)D Model (Can be any 3D CNN architecture) and the player tracking. The deep learning framework used to train the network was PyTorch and the machine used to train the model was the Nvidia RTX 3060ti GPU.
 

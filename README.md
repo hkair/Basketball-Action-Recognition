@@ -28,7 +28,7 @@ After reading the thesis [Classificazione di Azioni Cestistiche mediante Tecnich
 ![translate](examples/0000000_translate_32_0.gif)
 
 ### Training
-- The training was done at [train.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/train.py). The training was run for 25 epochs and with a batch size of 8 epoch. The model was trained with the classic 70/20/10 split. Where 70% of the data was use to train and 20% was used to validate the model. And, the rest of the 10% was used in the inference to test the final model. It was found that a learning rate of 0.0001 was better than a learning rate of 0.001.
+The training was done at [train.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/train.py). The training was run for 25 epochs and with a batch size of 8 epoch. The model was trained with the classic 70/20/10 split. Where 70% of the data was use to train and 20% was used to validate the model. And, the rest of the 10% was used in the inference to test the final model. It was found that a learning rate of 0.0001 was better than a learning rate of 0.001.
 
 #### Checkpointing
 Both history and checkpointing is done after every epoch with [checkpoints.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/utils/checkpoints.py) in the utils directory.
@@ -38,7 +38,7 @@ The final model was a R(2+1)D CNN trained on the additional augmented examples. 
 
 #### Confusion Matrix 
 
-0: Block, 1: Pass, 2: Run, 3: Dribble, 4: Shoot, 5: Ball in Hannd, 6: Defence, 7: Pick, 8: No Action, 9: Walk
+- 0: Block, 1: Pass, 2: Run, 3: Dribble, 4: Shoot, 5: Ball in Hannd, 6: Defence, 7: Pick, 8: No Action, 9: Walk
 
 ##### Test on Training and Validation Set
 ![training and validation](examples/epoch_19_checkpoint.png)

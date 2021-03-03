@@ -57,7 +57,7 @@ False | ![false_shoot](examples/false_shoot.gif) | ![false_dribbble](examples/fa
 All player tracking is done in [main.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/main.py). Players are tracked by manually selecting the ROI using the opencv TrackerCSRT_create() tracker. In theory, an unlimited amount of people or players can be tracked, but this will significantly increase the compute time. In the example above only 2 players, LeBron James (Offence) & Deandre Jordan (Defence) were tracked.
 
 ## Output
-After extracting the bounding boxes from TrackerCSRT_create(), a cropped clip of 16 frames is used to classify the actions. The 16 frame length clip is determined by the vid_stride (Set to 8 in the example video above) which is set in the cropWindows() function in ![main.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/main.py). 
+After extracting the bounding boxes from TrackerCSRT_create(), a cropped clip of 16 frames is used to classify the actions. The 16 frame length clip is determined by the vid_stride (Set to 8 in the example video above) which is set in the cropWindows() function in [main.py](https://github.com/hkair/Basketball-Action-Recognition/blob/master/main.py). Within the cropped window time frame the action is displayed on top of the bounding boxes to show the action of the tracked player.
 
 ## Future Additions
 - Separate augmented examples from validation and only in training.
@@ -66,6 +66,10 @@ After extracting the bounding boxes from TrackerCSRT_create(), a cropped clip of
 - Fully automate player tracking. Potentially using YOLO or any other Object Detection Models.
 - Play around with hyperparameters such as learning rates, batch size, layers frozen, etc.
 - Try various 3D-CNN Architectures or sequential models such as CONV-LSTMs.
+- Improve model to +90% accuracy and f1-score.
+
+Note:
+- Model does not perform well with off-ball actions for some reason. Often times, a defender is classified to be dribbling when they are not. This might be because of the simlarity of the stance that is often done while dribbling the ball and playing defence. On both movements, players generally lower their torsos forward to lowering their centre of gravity.
 
 ## Credits
 Major thanks to [Simone Francia](https://github.com/simonefrancia) for the basketball action dataset and paper on action classification with 3D-CNNs. 

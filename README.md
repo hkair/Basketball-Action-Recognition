@@ -46,7 +46,7 @@ The final model was a R(2+1)D CNN trained on the additional augmented examples. 
 ##### Testing on the 10% of the leftover data.
 ![confusion matrix](examples/confusion_matrix.png)
 
-#### Inference Examples
+#### Inference Examples - Error Analysis
 
 |   State   |   Shooting   |   Dribble   |   Pass   |   Defence   |   Pick   |   Run   |   Walk   |   Block   |   No Action   |
 :----------:|:------------:|:-----------:|:--------:|:-----------:|:--------:|:-------:|:--------:|:---------:|:--------------:

@@ -69,7 +69,7 @@ After extracting the bounding boxes from TrackerCSRT_create(), a cropped clip of
 - Improve model to +90% accuracy and f1-score.
 
 Note:
-- The Model does not perform well with off-ball actions for some reason. Often times, the defender is classified to be dribbling when they are not. This might be because of the simlarity of the stance while dribbling the ball and playing defence. For both movements, players generally lower their torsos forward in order to lower their centre of gravity.
+- The Model does not perform well with off-ball actions for some reason. Often times, the defender is classified to be dribbling when they are not. This might be because of the similarity of the stance while dribbling the ball and playing defence. For both movements, players generally lower their torsos forward in order to lower their centre of gravity.
 
 ## Credits
 Major thanks to [Simone Francia](https://github.com/simonefrancia) for the basketball action dataset and paper on action classification with 3D-CNNs. 
